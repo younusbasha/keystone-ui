@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, AlertTriangle, CheckCircle, Clock, Plus, FileText, Bot, Activity, Zap } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { useState } from 'react';
+import { TrendingUp, CheckCircle, Clock, Plus, FileText, Bot, Activity, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
 import { AgentIntelligenceMetrics } from '../components/metrics/AgentIntelligenceMetrics';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,8 +15,7 @@ export function DashboardPage() {
     activities, 
     dashboardStats, 
     createRequirementAnalysis, 
-    createProject,
-    isLoading 
+    createProject
   } = useData();
   
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -128,8 +126,8 @@ export function DashboardPage() {
     switch (level) {
       case 'low': return 'success';
       case 'medium': return 'warning';
-      case 'high': return 'error';
-      case 'critical': return 'error';
+      case 'high': return 'destructive';
+      case 'critical': return 'destructive';
       default: return 'default';
     }
   };
@@ -139,7 +137,7 @@ export function DashboardPage() {
       case 'completed': return 'success';
       case 'in-progress': return 'info';
       case 'review': return 'warning';
-      case 'blocked': return 'error';
+      case 'blocked': return 'destructive';
       default: return 'default';
     }
   };
@@ -191,32 +189,33 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text mb-2">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-3">
             Welcome back, {user?.name}!
           </h1>
-          <p className="text-neutral-600 dark:text-neutral-400 text-lg">
+          <p className="text-muted-foreground text-lg leading-relaxed">
             {getPersonaGreeting()}
           </p>
         </div>
         
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 flex-shrink-0">
           <Button 
             variant="outline" 
-            icon={Activity}
             onClick={() => setIsLogsModalOpen(true)}
+            className="btn-secondary"
           >
+            <Activity className="w-4 h-4 mr-2" />
             System Activity
           </Button>
           {hasPermission('create_requirements') && (
             <Button 
-              variant="primary" 
-              icon={Plus}
               onClick={() => setIsAddRequirementModalOpen(true)}
+              className="btn-primary"
             >
+              <Plus className="w-4 h-4 mr-2" />
               Add Requirement
             </Button>
           )}
@@ -225,81 +224,81 @@ export function DashboardPage() {
 
       {/* Real-time Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card variant="elevated" className="p-6">
+        <div className="card-modern">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 Active Projects
               </p>
-              <p className="text-3xl font-bold text-neutral-900 dark:text-white mt-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {dashboardStats.activeProjects}
               </p>
-              <p className="text-sm text-success-600 dark:text-success-400 mt-1">
+              <p className="text-sm text-success">
                 of {dashboardStats.totalProjects} total
               </p>
             </div>
-            <div className="p-3 bg-brand-100 dark:bg-brand-900 rounded-xl">
-              <TrendingUp className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+            <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl">
+              <TrendingUp className="w-8 h-8 text-primary" />
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card variant="elevated" className="p-6">
+        <div className="card-modern">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 Tasks Completed
               </p>
-              <p className="text-3xl font-bold text-neutral-900 dark:text-white mt-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {dashboardStats.tasksCompleted}
               </p>
-              <p className="text-sm text-brand-600 dark:text-brand-400 mt-1">
+              <p className="text-sm text-primary">
                 by AI agents
               </p>
             </div>
-            <div className="p-3 bg-success-100 dark:bg-success-900 rounded-xl">
-              <CheckCircle className="w-8 h-8 text-success-600 dark:text-success-400" />
+            <div className="p-4 bg-gradient-to-br from-success/10 to-success/20 rounded-xl">
+              <CheckCircle className="w-8 h-8 text-success" />
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card variant="elevated" className="p-6">
+        <div className="card-modern">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 Pending Reviews
               </p>
-              <p className="text-3xl font-bold text-neutral-900 dark:text-white mt-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {dashboardStats.pendingReviews}
               </p>
-              <p className="text-sm text-warning-600 dark:text-warning-400 mt-1">
+              <p className="text-sm text-warning">
                 require attention
               </p>
             </div>
-            <div className="p-3 bg-warning-100 dark:bg-warning-900 rounded-xl">
-              <Clock className="w-8 h-8 text-warning-600 dark:text-warning-400" />
+            <div className="p-4 bg-gradient-to-br from-warning/10 to-warning/20 rounded-xl">
+              <Clock className="w-8 h-8 text-warning" />
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card variant="elevated" className="p-6">
+        <div className="card-modern">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 AI Automation
               </p>
-              <p className="text-3xl font-bold text-neutral-900 dark:text-white mt-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {dashboardStats.automationRate}%
               </p>
-              <p className="text-sm text-accent-600 dark:text-accent-400 mt-1">
+              <p className="text-sm text-accent">
                 efficiency rate
               </p>
             </div>
-            <div className="p-3 bg-accent-100 dark:bg-accent-900 rounded-xl">
-              <Bot className="w-8 h-8 text-accent-600 dark:text-accent-400" />
+            <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/20 rounded-xl">
+              <Bot className="w-8 h-8 text-accent" />
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Agent Intelligence Metrics */}
@@ -310,72 +309,83 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Live Project Summary */}
-        <Card variant="elevated">
-          <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-              Project Overview
-            </h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-              Real-time status of your active projects
-            </p>
+        <div className="card-modern">
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Project Overview
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Real-time status of your active projects
+                </p>
+              </div>
+            </div>
           </div>
           <div className="p-6 space-y-4">
             {projects.length === 0 ? (
-              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-                <Plus className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No projects yet. Create your first project to get started.</p>
+              <div className="text-center py-12">
+                <div className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl w-fit mx-auto mb-4">
+                  <Plus className="w-12 h-12 text-muted-foreground/50" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-4">Create your first project to get started with AI-powered development.</p>
                 <Button 
                   variant="outline" 
-                  className="mt-3"
+                  className="btn-primary"
                   onClick={() => setIsCreateProjectModalOpen(true)}
                 >
+                  <Plus className="w-4 h-4 mr-2" />
                   Create Project
                 </Button>
               </div>
             ) : (
               projects.map((project) => (
-                <div key={project.id} className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl card-hover">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-neutral-900 dark:text-white">
+                <div key={project.id} className="group p-5 bg-gradient-to-r from-card to-card/50 border border-border rounded-xl hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-lg mb-1 truncate">
                         {project.name}
                       </h3>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {project.description}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <Badge variant={getStatusColor(project.status)}>
+                    <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+                      <span className={`badge-modern ${getStatusColor(project.status)}`}>
                         {project.status}
-                      </Badge>
+                      </span>
                       {project.riskFlags > 0 && (
-                        <Badge variant="error">
+                        <span className="badge-modern bg-destructive/10 text-destructive border-destructive/20">
                           {project.riskFlags} risks
-                        </Badge>
+                        </span>
                       )}
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Bot className="w-4 h-4 text-accent-600" />
-                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <Bot className="w-4 h-4 text-accent" />
+                        <span className="text-sm text-muted-foreground">
                           {project.assignedAgents.length} agents
                         </span>
                       </div>
-                      <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                      <div className="text-sm text-muted-foreground">
                         Updated {formatDistanceToNow(project.lastActivity)} ago
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-3">
-                      <div className="text-sm font-medium text-neutral-900 dark:text-white">
+                      <div className="text-sm font-semibold text-foreground">
                         {project.progress}%
                       </div>
-                      <div className="w-20 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                      <div className="w-24 bg-border rounded-full h-2.5 overflow-hidden">
                         <div
-                          className="bg-brand-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500 ease-out"
                           style={{ width: `${project.progress}%` }}
                         />
                       </div>
@@ -385,46 +395,56 @@ export function DashboardPage() {
               ))
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Real-time Activity Feed */}
-        <Card variant="elevated">
-          <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-              Recent Activity
-            </h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-              Live agent actions and system events
-            </p>
+        <div className="card-modern">
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-br from-accent/20 to-accent/30 rounded-lg">
+                <Activity className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Recent Activity
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Live agent actions and system events
+                </p>
+              </div>
+            </div>
           </div>
           <div className="p-6 space-y-4">
             {activities.length === 0 ? (
-              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-                <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No recent activity</p>
+              <div className="text-center py-12">
+                <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/20 rounded-2xl w-fit mx-auto mb-4">
+                  <Activity className="w-12 h-12 text-muted-foreground/50" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">No recent activity</h3>
+                <p className="text-muted-foreground">Agent actions will appear here as they happen.</p>
               </div>
             ) : (
               activities.slice(0, 6).map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                  <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
-                    activity.type === 'agent_decision' ? 'bg-accent-500' :
-                    activity.type === 'escalation' ? 'bg-error-500' :
-                    activity.type === 'flagged_task' ? 'bg-warning-500' :
-                    'bg-brand-500'
+                <div key={activity.id} className="group flex items-start space-x-4 p-4 rounded-xl hover:bg-accent/5 transition-colors">
+                  <div className={`w-3 h-3 rounded-full mt-3 flex-shrink-0 ${
+                    activity.type === 'agent_decision' ? 'bg-accent animate-pulse' :
+                    activity.type === 'escalation' ? 'bg-destructive animate-pulse' :
+                    activity.type === 'flagged_task' ? 'bg-warning animate-pulse' :
+                    'bg-primary animate-pulse'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <h4 className="text-sm font-medium text-neutral-900 dark:text-white">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                         {activity.title}
                       </h4>
-                      <Badge variant={getRiskLevelColor(activity.riskLevel)} size="sm">
+                      <span className={`badge-modern text-xs ${getRiskLevelColor(activity.riskLevel)}`}>
                         {activity.riskLevel}
-                      </Badge>
+                      </span>
                     </div>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                       {activity.description}
                     </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-2">
+                    <p className="text-xs text-muted-foreground/70">
                       {formatDistanceToNow(activity.timestamp)} ago
                     </p>
                   </div>
@@ -432,42 +452,53 @@ export function DashboardPage() {
               ))
             )}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Persona-Specific Quick Actions */}
-      <Card variant="elevated">
-        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-            Quick Actions
-          </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Common tasks for your role
-          </p>
+      <div className="card-modern">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-br from-secondary/20 to-secondary/30 rounded-lg">
+              <Zap className="w-5 h-5 text-secondary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Quick Actions
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Common tasks for your role
+              </p>
+            </div>
+          </div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {getPersonaActions().map((action, index) => {
               const Icon = action.icon;
               return (
-                <Button 
+                <button 
                   key={index}
-                  variant="outline" 
-                  size="lg" 
-                  icon={Icon} 
-                  className="justify-start h-16"
+                  className="group flex items-start space-x-4 p-6 rounded-xl border border-border hover:border-primary/30 hover:bg-gradient-to-br hover:from-card to-card/50 transition-all duration-300 hover:shadow-lg text-left"
                   onClick={action.action}
                 >
-                  <div className="text-left">
-                    <div className="font-medium">{action.label}</div>
-                    <div className="text-sm text-neutral-500">Role-specific action</div>
+                  <div className="p-3 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl group-hover:from-primary/20 group-hover:to-secondary/20 transition-all duration-300">
+                    <Icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
                   </div>
-                </Button>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                      {action.label}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Role-specific action for {user?.role}
+                    </div>
+                  </div>
+                </button>
               );
             })}
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Create Project Modal */}
       <Modal
@@ -533,10 +564,9 @@ export function DashboardPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
               onClick={handleCreateProject}
               disabled={!newProject.name.trim() || isProcessing}
-              loading={isProcessing}
+              className="btn-primary"
             >
               {isProcessing ? 'Creating Project...' : 'Create Project'}
             </Button>
@@ -614,10 +644,9 @@ export function DashboardPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
               onClick={handleAddRequirement}
               disabled={!newRequirement.trim() || !selectedProject || isProcessing}
-              loading={isProcessing}
+              className="btn-primary"
             >
               {isProcessing ? 'Processing with AI...' : 'Add Requirement'}
             </Button>
@@ -652,7 +681,7 @@ export function DashboardPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant={getRiskLevelColor(activity.riskLevel)} size="sm">
+                        <Badge variant={getRiskLevelColor(activity.riskLevel)}>
                           {activity.riskLevel}
                         </Badge>
                         <span className="text-xs text-neutral-500 dark:text-neutral-400">

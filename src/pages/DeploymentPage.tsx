@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Play, Pause, RotateCcw, Settings, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
 import { mockDeploymentPipelines } from '../data/mockData';
 import { DeploymentPipeline, DeploymentStage } from '../types';
@@ -74,7 +74,7 @@ export function DeploymentPage() {
           </p>
         </div>
         
-        <Button variant="primary" icon={Settings}>
+        <Button variant="default" icon={Settings}>
           Configure Pipeline
         </Button>
       </div>
@@ -121,13 +121,13 @@ export function DeploymentPage() {
                                   {stage.duration}s
                                 </span>
                               )}
-                              <Badge variant={getStatusColor(stage.status)} size="sm">
+                              <Badge variant={getStatusColor(stage.status)}>
                                 {stage.status}
                               </Badge>
                               {stage.logs.length > 0 && (
                                 <Button
                                   variant="ghost"
-                                  size="sm"
+                                 
                                   onClick={() => handleViewLogs(stage)}
                                   className="text-xs"
                                 >
@@ -156,8 +156,8 @@ export function DeploymentPage() {
                 <div className="flex space-x-2">
                   {pipeline.status === 'idle' || pipeline.status === 'failed' ? (
                     <Button
-                      variant="primary"
-                      size="sm"
+                      variant="default"
+                     
                       icon={Play}
                       onClick={() => handleRunPipeline(pipeline)}
                     >
@@ -166,7 +166,7 @@ export function DeploymentPage() {
                   ) : (
                     <Button
                       variant="outline"
-                      size="sm"
+                     
                       icon={Pause}
                       onClick={() => handleStopPipeline(pipeline)}
                     >
@@ -175,7 +175,7 @@ export function DeploymentPage() {
                   )}
                   <Button
                     variant="ghost"
-                    size="sm"
+                   
                     icon={RotateCcw}
                     onClick={() => handleRunPipeline(pipeline)}
                   >
@@ -185,7 +185,7 @@ export function DeploymentPage() {
                 
                 <Button
                   variant="ghost"
-                  size="sm"
+                 
                   icon={Settings}
                   onClick={() => setSelectedPipeline(pipeline)}
                 >
@@ -225,7 +225,7 @@ export function DeploymentPage() {
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {pipeline.stages.filter(s => s.status === 'success').length}/{pipeline.stages.length} stages
                   </span>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost">
                     View Details
                   </Button>
                 </div>

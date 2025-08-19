@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Sparkles, CheckCircle, ArrowRight } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { SimplifiedWorkflow } from '../components/ui/SimplifiedWorkflow';
 import { ProgressiveDisclosure } from '../components/ui/ProgressiveDisclosure';
 import { FeedbackCapture } from '../components/feedback/FeedbackCapture';
@@ -232,7 +232,7 @@ export function SimplifiedRequirementsPage() {
                       Back to Edit
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="default"
                       icon={ArrowRight}
                       onClick={handleApprove}
                       className="flex-1"
@@ -266,7 +266,7 @@ export function SimplifiedRequirementsPage() {
                   <Button variant="outline" onClick={() => setCurrentPhase('input')}>
                     Add Another Requirement
                   </Button>
-                  <Button variant="primary">
+                  <Button variant="default">
                     View Task Breakdown
                   </Button>
                 </div>

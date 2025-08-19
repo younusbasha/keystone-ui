@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Download, Filter, Search } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table } from '../components/ui/Table';
 import { mockAuditLogs } from '../data/mockData';
 import { AuditLog, RiskLevel } from '../types';
@@ -94,7 +94,7 @@ export function AuditLogsPage() {
           <div className="font-medium text-gray-900 dark:text-white">
             {log.agentName || log.userName || 'System'}
           </div>
-          <Badge variant={log.agentName ? 'agent' : 'human'} size="sm">
+          <Badge variant={log.agentName ? 'agent' : 'human'}>
             {log.agentName ? 'Agent' : 'Human'}
           </Badge>
         </div>
@@ -108,7 +108,7 @@ export function AuditLogsPage() {
           <div className="font-medium text-gray-900 dark:text-white">
             {log.action}
           </div>
-          <Badge variant="default" size="sm">
+          <Badge variant="default">
             {log.actionType}
           </Badge>
         </div>

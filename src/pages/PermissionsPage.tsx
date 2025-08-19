@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Users, Shield, Settings } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { mockSystemSettings } from '../data/mockData';
 import { SystemSettings, UserRole } from '../types';
 
@@ -166,7 +166,7 @@ export function PermissionsPage() {
 
       {/* Save Settings */}
       <div className="flex justify-end">
-        <Button variant="primary">
+        <Button variant="default">
           Save Settings
         </Button>
       </div>

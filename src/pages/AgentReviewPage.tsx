@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Filter, Bot } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table } from '../components/ui/Table';
 import { Modal } from '../components/ui/Modal';
 import { mockAgentActions } from '../data/mockData';
@@ -112,7 +112,7 @@ export function AgentReviewPage() {
         <div className="flex space-x-2">
           <Button
             variant="ghost"
-            size="sm"
+           
             onClick={() => {
               setSelectedAction(action);
               setIsModalOpen(true);
@@ -124,7 +124,7 @@ export function AgentReviewPage() {
             <>
               <Button
                 variant="outline"
-                size="sm"
+               
                 icon={CheckCircle}
                 onClick={() => handleApprove(action.id)}
                 className="text-green-600 hover:text-green-700"
@@ -133,7 +133,7 @@ export function AgentReviewPage() {
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+               
                 icon={XCircle}
                 onClick={() => handleReject(action.id)}
                 className="text-red-600 hover:text-red-700"
@@ -142,7 +142,7 @@ export function AgentReviewPage() {
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+               
                 icon={AlertTriangle}
                 onClick={() => handleEscalate(action.id)}
                 className="text-yellow-600 hover:text-yellow-700"
@@ -303,7 +303,7 @@ export function AgentReviewPage() {
             {selectedAction.status === 'pending' && (
               <div className="flex space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button
-                  variant="primary"
+                  variant="default"
                   icon={CheckCircle}
                   onClick={() => {
                     handleApprove(selectedAction.id);

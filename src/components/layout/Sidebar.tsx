@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,15 +14,28 @@ import {
   Rocket,
   ChevronLeft,
   ChevronRight,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
+import { Button } from '@/components/ui/button';
 
 interface NavItem {
   to: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   roles: UserRole[];
+  badge?: string;
+  color?: string;
+}
+
+interface SidebarProps {
+  isMobile?: boolean;
+  isOpen?: boolean;
+  isCollapsed?: boolean;
+  onClose?: () => void;
+  onToggleCollapse?: () => void;
 }
 
 const navItems: NavItem[] = [
@@ -31,96 +44,145 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
     label: 'Dashboard',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-primary',
   },
   {
     to: '/projects',
     icon: FolderOpen,
     label: 'Projects',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-secondary',
   },
   {
     to: '/requirements',
     icon: FileText,
     label: 'Requirements',
     roles: ['PM', 'BA'],
+    color: 'text-accent',
   },
   {
     to: '/tasks',
     icon: GitBranch,
     label: 'Task Breakdown',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    badge: 'New',
+    color: 'text-warning',
   },
   {
     to: '/agents',
     icon: Bot,
     label: 'AI Agents',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-primary',
   },
   {
     to: '/agent-review',
     icon: Shield,
     label: 'Agent Review',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-success',
   },
   {
     to: '/integrations',
     icon: Zap,
     label: 'Integrations',
     roles: ['PM', 'BA'],
+    color: 'text-warning',
   },
   {
     to: '/deployment',
     icon: Rocket,
     label: 'Deployment',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-secondary',
   },
   {
     to: '/permissions',
     icon: Users,
     label: 'Permissions',
     roles: ['PM'],
+    color: 'text-destructive',
   },
   {
     to: '/audit-logs',
     icon: ScrollText,
     label: 'Audit Logs',
     roles: ['PM', 'Developer', 'Reviewer'],
+    color: 'text-muted-foreground',
   },
   {
     to: '/settings',
     icon: Settings,
     label: 'Settings',
     roles: ['PM', 'BA', 'Developer', 'Reviewer'],
+    color: 'text-muted-foreground',
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ 
+  isMobile = false, 
+  isOpen = false, 
+  isCollapsed = false, 
+  onClose,
+  onToggleCollapse 
+}: SidebarProps) {
   const { user } = useAuth();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!user) return null;
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(user.role));
 
+  const handleNavClick = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 h-full transition-all duration-300 flex flex-col shadow-soft`}>
-      <div className={`p-6 ${isCollapsed ? 'px-4' : ''}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
-          <img 
-            src="/techsophy-logo.svg" 
-            alt="TechSophy" 
-            className={`${isCollapsed ? 'h-8 w-8' : 'h-10 w-auto'} text-techsophy-600 dark:text-white`}
-          />
-          {!isCollapsed && (
-            <div className="ml-2">
-              {/* Logo text is included in SVG */}
+    <div className={`
+      ${isMobile ? 'w-72' : isCollapsed ? 'w-20' : 'w-72'} 
+      h-full bg-card/95 backdrop-blur-xl border-r border-border/50
+      flex flex-col shadow-lg transition-all duration-300 ease-in-out
+      ${isMobile ? 'animate-slide-in-right' : ''}
+    `}>
+      {/* Header */}
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center ${isCollapsed && !isMobile ? 'justify-center' : 'space-x-3'}`}>
+            <div className="relative">
+              <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+                <Sparkles className={`${isCollapsed && !isMobile ? 'h-6 w-6' : 'h-8 w-8'} text-white`} />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-accent rounded-full animate-pulse"></div>
             </div>
+            {(!isCollapsed || isMobile) && (
+              <div className="animate-fade-in">
+                <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Keystone
+                </div>
+                <div className="text-xs text-muted-foreground">AI Development Platform</div>
+              </div>
+            )}
+          </div>
+          
+          {/* Mobile close button */}
+          {isMobile && onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0"
+              aria-label="Close sidebar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
       
-      <nav className="px-4 space-y-2 flex-1">
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.to;
@@ -129,36 +191,84 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex items-center ${isCollapsed ? 'justify-center px-3' : 'px-4'} py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-techsophy-100 text-techsophy-700 dark:bg-techsophy-900 dark:text-techsophy-200 shadow-soft'
-                  : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 hover:shadow-soft'
-              }`}
-              title={isCollapsed ? item.label : undefined}
+              onClick={handleNavClick}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? 'active' : ''} ${
+                  isCollapsed && !isMobile ? 'justify-center px-3' : 'px-4'
+                }`
+              }
             >
-              <Icon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'}`} />
-              {!isCollapsed && (
-                <span className="truncate">{item.label}</span>
+              <div className="flex items-center min-w-0">
+                <Icon className={`h-5 w-5 ${item.color} ${
+                  isCollapsed && !isMobile ? '' : 'mr-3'
+                } transition-all duration-200 group-hover:scale-110 ${
+                  isActive ? 'text-primary' : ''
+                }`} />
+                {(!isCollapsed || isMobile) && (
+                  <span className="truncate flex-1 font-medium">{item.label}</span>
+                )}
+              </div>
+              
+              {/* Badge for new features */}
+              {item.badge && (!isCollapsed || isMobile) && (
+                <span className="badge-modern animate-pulse">
+                  {item.badge}
+                </span>
               )}
             </NavLink>
           );
         })}
       </nav>
+
+      {/* User info section */}
+      {(!isCollapsed || isMobile) && (
+        <div className="p-4 border-t border-border/50 animate-fade-in">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-border/30">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="h-10 w-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-success border-2 border-card rounded-full"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-foreground truncate">
+                  {user.name}
+                </div>
+                <div className="text-xs text-muted-foreground flex items-center">
+                  {user.role} 
+                  <span className="mx-1">•</span>
+                  <span className="text-success">Online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
-      {/* Collapse Toggle */}
-      <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200 hover:shadow-soft"
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronLeft className="w-5 h-5" />
-          )}
-        </button>
-      </div>
+      {/* Collapse Toggle - Desktop only */}
+      {!isMobile && onToggleCollapse && (
+        <div className="p-4 border-t border-border/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className={`w-full flex items-center ${
+              isCollapsed ? 'justify-center' : 'justify-start'
+            } group hover:bg-accent/10`}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:scale-110" />
+            ) : (
+              <>
+                <ChevronLeft className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
+                <span className="text-sm font-medium">Collapse</span>
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Save, User, Shield, Bell, Palette, Globe, Database, Key } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -226,7 +226,7 @@ export function SettingsPage() {
                       </Badge>
                       <Button
                         variant="outline"
-                        size="sm"
+                       
                         onClick={() => updateSetting('security', 'twoFactorAuth', !settings.security.twoFactorAuth)}
                       >
                         {settings.security.twoFactorAuth ? 'Disable' : 'Enable'}
@@ -283,7 +283,7 @@ export function SettingsPage() {
                       </Badge>
                       <Button
                         variant="outline"
-                        size="sm"
+                       
                         onClick={toggleTheme}
                       >
                         Switch to {theme === 'light' ? 'Dark' : 'Light'}
@@ -332,7 +332,7 @@ export function SettingsPage() {
                           <p className="text-sm text-gray-600 dark:text-gray-400">Connected</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline">
                         Configure
                       </Button>
                     </div>
@@ -349,7 +349,7 @@ export function SettingsPage() {
                           <p className="text-sm text-gray-600 dark:text-gray-400">Connected</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline">
                         Configure
                       </Button>
                     </div>
@@ -410,10 +410,10 @@ export function SettingsPage() {
                       Danger Zone
                     </h3>
                     <div className="space-y-2">
-                      <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+                      <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
                         Export Data
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+                      <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
                         Reset All Settings
                       </Button>
                     </div>
@@ -425,7 +425,7 @@ export function SettingsPage() {
             {/* Save Button */}
             <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
               <Button
-                variant="primary"
+                variant="default"
                 icon={Save}
                 onClick={handleSave}
               >

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, GitBranch, Users, Calendar, ExternalLink } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Plus, Search, Filter, GitBranch, Users, Calendar, ExternalLink, MoreVertical, Star, Archive, Edit, Trash2, FolderOpen, Activity, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
 import { useData } from '../contexts/DataContext';
 import { mockAgents } from '../data/mockData';
@@ -14,6 +13,8 @@ export function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'on-hold'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'name' | 'progress' | 'updated'>('updated');
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -22,18 +23,30 @@ export function ProjectsPage() {
     assignedAgents: [] as string[],
   });
 
-  const filteredProjects = projects.filter(project => {
-    if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !project.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (filterStatus !== 'all') {
-      if (filterStatus === 'active' && project.status !== 'in-progress') return false;
-      if (filterStatus === 'completed' && project.status !== 'completed') return false;
-      if (filterStatus === 'on-hold' && project.status !== 'blocked') return false;
-    }
-    return true;
-  });
+  const filteredProjects = projects
+    .filter(project => {
+      if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          !project.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      if (filterStatus !== 'all') {
+        if (filterStatus === 'active' && project.status !== 'in-progress') return false;
+        if (filterStatus === 'completed' && project.status !== 'completed') return false;
+        if (filterStatus === 'on-hold' && project.status !== 'blocked') return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'progress':
+          return b.progress - a.progress;
+        case 'updated':
+        default:
+          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+      }
+    });
 
   const handleCreateProject = async () => {
     if (!newProject.name.trim()) return;
@@ -59,9 +72,9 @@ export function ProjectsPage() {
         integrations: [],
         assignedAgents: [],
       });
-      alert('Project created successfully!');
+      alert('✅ Project created successfully!');
     } catch (error) {
-      alert('Error creating project. Please try again.');
+      alert('❌ Error creating project. Please try again.');
     }
   };
 
@@ -71,7 +84,7 @@ export function ProjectsPage() {
       case 'in-progress': return 'info';
       case 'review': return 'warning';
       case 'blocked': return 'error';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
@@ -87,213 +100,449 @@ export function ProjectsPage() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Projects
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage your projects and their agent assignments
-          </p>
-        </div>
-        
-        <Button 
-          variant="primary" 
-          icon={Plus}
-          onClick={() => setIsCreateModalOpen(true)}
-        >
-          Create Project
-        </Button>
-      </div>
+  const handleProjectAction = (projectId: string, action: 'view' | 'edit' | 'archive' | 'delete') => {
+    switch (action) {
+      case 'view':
+        window.location.href = `/projects/${projectId}`;
+        break;
+      case 'edit':
+        // TODO: Implement edit functionality
+        alert('Edit functionality coming soon!');
+        break;
+      case 'archive':
+        // TODO: Implement archive functionality
+        alert('Archive functionality coming soon!');
+        break;
+      case 'delete':
+        if (confirm('Are you sure you want to delete this project?')) {
+          // TODO: Implement delete functionality
+          alert('Delete functionality coming soon!');
+        }
+        break;
+    }
+  };
 
-      {/* Filters */}
-      <Card>
-        <div className="p-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search projects..."
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                />
+  const ProjectCard = ({ project }: { project: Project }) => (
+    <div 
+      className="group card-modern p-6 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+      onClick={() => handleProjectAction(project.id, 'view')}
+    >
+      <div className="space-y-4">
+        {/* Project Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg">
+                <GitBranch className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                  {project.name}
+                </h3>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Badge variant={getStatusColor(project.status)}>
+                    {project.status.replace('-', ' ')}
+                  </Badge>
+                  {project.riskFlags > 0 && (
+                    <Badge variant="destructive">
+                      {project.riskFlags} risk{project.riskFlags > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
-            
-            <div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+          </div>
+          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                // TODO: Implement favorite functionality
+              }}
+            >
+              <Star className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                // TODO: Show dropdown menu
+              }}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Project Description */}
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {project.description}
+        </p>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium text-foreground">
+              {project.progress}%
+            </span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${project.progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Integrations */}
+        <div className="space-y-2">
+          <div className="text-sm text-muted-foreground font-medium">
+            Integrations
+          </div>
+          <div className="flex items-center space-x-2 flex-wrap gap-1">
+            {project.integrations.slice(0, 4).map((integration) => (
+              <span
+                key={integration}
+                className="inline-flex items-center px-2 py-1 rounded-md bg-accent/10 text-xs font-medium text-accent"
+                title={integration}
               >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On Hold</option>
-              </select>
+                {getIntegrationIcon(integration)} {integration}
+              </span>
+            ))}
+            {project.integrations.length > 4 && (
+              <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted/10 text-xs font-medium text-muted-foreground">
+                +{project.integrations.length - 4} more
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Team and Activity */}
+        <div className="flex items-center justify-between pt-3 border-t border-border">
+          <div className="flex items-center space-x-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {project.assignedAgents.length} agent{project.assignedAgents.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {formatDistanceToNow(project.lastActivity)} ago
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+              </span>
+            ))}
+            {project.integrations.length > 4 && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                +{project.integrations.length - 4} more
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 text-sm text-neutral-600 dark:text-neutral-400">
+              <Users className="w-4 h-4" />
+              <span>{project.assignedAgents.length}</span>
+            </div>
+            <div className="text-xs text-neutral-500 dark:text-neutral-500">
+              Updated {formatDistanceToNow(project.lastActivity)} ago
+            </div>
+          </div>
+          
+          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              icon={GitBranch}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.location.href = `/tasks?project=${project.id}`;
+              }}
+            />
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              icon={ExternalLink}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProjectAction(project.id, 'view');
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-8 p-6">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl">
+              <FolderOpen className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Projects
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your projects and their AI agent assignments
+              </p>
             </div>
           </div>
         </div>
-      </Card>
+        
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="btn-primary"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Project
+        </Button>
+      </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <Card key={project.id} hoverable className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {project.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {project.description}
-                  </p>
-                </div>
-                <Badge variant={getStatusColor(project.status)}>
-                  {project.status}
-                </Badge>
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="card-modern p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+              <p className="text-2xl font-bold text-foreground">{projects.length}</p>
+            </div>
+            <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl">
+              <FolderOpen className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+        </div>
 
-              {/* Progress */}
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {project.progress}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${project.progress}%` }}
-                  />
-                </div>
-              </div>
+        <div className="card-modern p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Active</p>
+              <p className="text-2xl font-bold text-foreground">
+                {projects.filter(p => p.status === 'in-progress').length}
+              </p>
+            </div>
+            <div className="p-3 bg-gradient-to-br from-success/10 to-success/20 rounded-xl">
+              <Activity className="h-6 w-6 text-success" />
+            </div>
+          </div>
+        </div>
 
-              {/* Integrations */}
-              <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Integrations
-                </div>
-                <div className="flex items-center space-x-2">
-                  {project.integrations.map((integration) => (
-                    <span
-                      key={integration}
-                      className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-xs"
-                      title={integration}
-                    >
-                      {getIntegrationIcon(integration)} {integration}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        <div className="card-modern p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Completed</p>
+              <p className="text-2xl font-bold text-foreground">
+                {projects.filter(p => p.status === 'completed').length}
+              </p>
+            </div>
+            <div className="p-3 bg-gradient-to-br from-accent/10 to-accent/20 rounded-xl">
+              <Users className="h-6 w-6 text-accent" />
+            </div>
+          </div>
+        </div>
 
-              {/* Assigned Agents */}
-              <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Assigned Agents
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-900 dark:text-white">
-                    {project.assignedAgents.length} agents
-                  </span>
-                </div>
-              </div>
+        <div className="card-modern p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">At Risk</p>
+              <p className="text-2xl font-bold text-foreground">
+                {projects.filter(p => p.riskFlags > 0).length}
+              </p>
+            </div>
+            <div className="p-3 bg-gradient-to-br from-warning/10 to-warning/20 rounded-xl">
+              <AlertTriangle className="h-6 w-6 text-warning" />
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Risk Flags */}
-              {project.riskFlags > 0 && (
-                <div className="flex items-center space-x-2">
-                  <Badge variant="error" size="sm">
-                    {project.riskFlags} risk flags
-                  </Badge>
-                </div>
-              )}
+      {/* Filters and Search */}
+      <div className="card-modern p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search projects..."
+                className="input-modern pl-10"
+              />
+            </div>
+            
+            {/* Status Filter */}
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as any)}
+              className="input-modern"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="on-hold">On Hold</option>
+            </select>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Updated {formatDistanceToNow(project.lastActivity)} ago
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="ghost" size="sm" icon={GitBranch}>
-                    Tasks
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    icon={ExternalLink}
-                    onClick={() => window.open(`/projects/${project.id}`, '_blank')}
-                  >
-                    View
-                  </Button>
-                </div>
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="input-modern"
+            >
+              <option value="updated">Last Updated</option>
+              <option value="name">Name</option>
+              <option value="progress">Progress</option>
+            </select>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center space-x-2 bg-accent/10 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              List
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Projects Grid/List */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="card-modern p-6 animate-pulse">
+              <div className="space-y-4">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+                <div className="h-2 bg-muted rounded w-full"></div>
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="card-modern text-center py-12">
+          <div className="space-y-4">
+            <div className="mx-auto w-24 h-24 bg-accent/10 rounded-full flex items-center justify-center">
+              <FolderOpen className="w-12 h-12 text-accent" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">
+                {searchTerm || filterStatus !== 'all' ? 'No projects found' : 'No projects yet'}
+              </h3>
+              <p className="text-muted-foreground mt-1">
+                {searchTerm || filterStatus !== 'all' 
+                  ? 'Try adjusting your search or filters'
+                  : 'Create your first project to get started with AI-powered development'
+                }
+              </p>
+            </div>
+            {(!searchTerm && filterStatus === 'all') && (
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="btn-primary"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Project
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
 
       {/* Create Project Modal */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setNewProject({
+            name: '',
+            description: '',
+            repository: '',
+            integrations: [],
+            assignedAgents: [],
+          });
+        }}
         title="Create New Project"
         maxWidth="lg"
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="form-label">
               Project Name
             </label>
             <input
               type="text"
               value={newProject.name}
               onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              className="form-input"
               placeholder="Enter project name"
+              autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="form-label">
               Description
             </label>
             <textarea
               value={newProject.description}
               onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-              placeholder="Describe your project"
+              rows={4}
+              className="form-input"
+              placeholder="Describe your project goals and requirements"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="form-label">
               Repository URL (Optional)
             </label>
             <input
               type="url"
               value={newProject.repository}
               onChange={(e) => setNewProject({ ...newProject, repository: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              className="form-input"
               placeholder="https://github.com/company/project"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Assign Agents
+            <label className="form-label">
+              Assign AI Agents
             </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+            <div className="space-y-3 max-h-48 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
               {mockAgents.map((agent) => (
-                <label key={agent.id} className="flex items-center space-x-3">
+                <label key={agent.id} className="flex items-center space-x-3 group cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newProject.assignedAgents.includes(agent.id)}
@@ -310,17 +559,17 @@ export function ProjectsPage() {
                         });
                       }
                     }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
                   />
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="text-sm font-medium text-neutral-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                       {agent.name}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
                       {agent.description}
                     </div>
                   </div>
-                  <Badge variant="agent" size="sm">
+                  <Badge variant="default">
                     {agent.type}
                   </Badge>
                 </label>
@@ -328,17 +577,18 @@ export function ProjectsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setIsCreateModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={handleCreateProject}
               disabled={!newProject.name.trim()}
+              loading={isLoading}
             >
               Create Project
             </Button>

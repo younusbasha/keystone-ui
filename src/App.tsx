@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { Layout } from './components/layout/Layout';
+import { Layout } from './shared/components/layout.tsx';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { ProjectsPage } from './pages/ProjectsPage';
-import { SimplifiedRequirementsPage } from './pages/SimplifiedRequirementsPage';
+import { DashboardPage } from './features/dashboard/dashboard-page.tsx';
+import { ProjectsPage } from './features/projects/projects-page.tsx';
+import { RequirementsPage } from './features/requirements/requirements-page.tsx';
 import { TaskBreakdownPage } from './pages/TaskBreakdownPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
 import { AgentsPage } from './pages/AgentsPage';
@@ -23,8 +23,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen gradient-surface flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600 mx-auto"></div>
+            <div className="absolute inset-0 rounded-full bg-primary-500/20 animate-ping"></div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+              Loading TechSophy Platform
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Initializing AI agents and workspace...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -52,7 +65,7 @@ function AppRoutes() {
       } />
       <Route path="/requirements" element={
         <ProtectedRoute>
-          <SimplifiedRequirementsPage />
+          <RequirementsPage />
         </ProtectedRoute>
       } />
       <Route path="/tasks" element={
@@ -111,7 +124,7 @@ function App() {
       <AuthProvider>
         <DataProvider>
           <Router>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+            <div className="min-h-screen bg-gradient-to-br from-surface-50 via-white to-primary-50/30 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800 transition-colors duration-300">
               <AppRoutes />
             </div>
           </Router>

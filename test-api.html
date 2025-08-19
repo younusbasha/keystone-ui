@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Connectivity Test</h1>
+    <button onclick="testProxy()">Test Proxy API</button>
+    <button onclick="testDirect()">Test Direct API</button>
+    <button onclick="testRegister()">Test Registration</button>
+    <div id="results"></div>
+
+    <script>
+        const log = (message) => {
+            const results = document.getElementById('results');
+            results.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+            console.log(message);
+        };
+
+        const testProxy = async () => {
+            log('Testing proxy API...');
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                log(`✅ Proxy OPTIONS status: ${response.status}`);
+                log(`Proxy response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+            } catch (error) {
+                log(`❌ Proxy test failed: ${error.message}`);
+            }
+        };
+
+        const testDirect = async () => {
+            log('Testing direct API...');
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/register', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors',
+                });
+                log(`✅ Direct OPTIONS status: ${response.status}`);
+                log(`Direct response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+            } catch (error) {
+                log(`❌ Direct test failed: ${error.message}`);
+            }
+        };
+
+        const testRegister = async () => {
+            log('Testing registration via proxy...');
+            try {
+                const testData = {
+                    email: "test@example.com",
+                    username: "testuser123",
+                    first_name: "Test",
+                    last_name: "User",
+                    password: "TestPass123!"
+                };
+
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                });
+                
+                log(`Registration status: ${response.status}`);
+                
+                const responseData = await response.json().catch(() => 'Could not parse JSON');
+                log(`Registration response: ${JSON.stringify(responseData)}`);
+            } catch (error) {
+                log(`❌ Registration test failed: ${error.message}`);
+            }
+        };
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('Page loaded. Starting tests...');
+        });
+    </script>
+</body>
+</html>

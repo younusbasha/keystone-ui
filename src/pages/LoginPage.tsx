@@ -1,16 +1,40 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Shield, AlertCircle, Bot, Zap, TrendingUp } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
+import { AlertCircle, Bot, Zap, TrendingUp, Sparkles, Shield, Users, ChevronRight, Wifi, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../contexts/AuthContext';
+import { ApiHealthService } from '../services/healthService';
+import { config } from '../config';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const { user, login, isLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [apiStatus, setApiStatus] = useState<string>('checking');
+  const [showDebug, setShowDebug] = useState(config.features.enableDebugMode);
+  const { user, login, register } = useAuth();
+  
+  // Check API status on component mount
+  useEffect(() => {
+    const checkApiStatus = async () => {
+      try {
+        const health = await ApiHealthService.checkHealth();
+        setApiStatus(health.status);
+      } catch (error) {
+        console.error('API health check failed:', error);
+        setApiStatus('error');
+      }
+    };
+    
+    checkApiStatus();
+  }, []);
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -19,221 +43,496 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    const success = await login(email, password);
-    if (!success) {
-      setError('Invalid credentials');
-    }
-  };
+    setIsSubmitting(true);
 
-  const quickLogin = (testEmail: string) => {
+    try {
+      if (isRegistering) {
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+        
+        console.log('Attempting registration with:', {
+          email,
+          username,
+          first_name: firstName,
+          last_name: lastName,
+          password: '***'
+        });
+        
+        await register({
+          email,
+          username,
+          first_name: firstName,
+          last_name: lastName,
+          password
+        });
+        
+        console.log('Registration successful');
+      } else {
+        console.log('Attempting login with email/username:', email);
+        const success = await login(email, password);
+        if (!success) {
+          setError('Invalid credentials. Please check your email/username and password.');
+        }
+      }
+    } catch (err) {
+      console.error('Authentication error:', err);
+      
+      // Parse validation errors from API response
+      if (err instanceof Error) {
+        let errorMessage = err.message;
+        
+        try {
+          // Try to parse detailed validation errors
+          const errorObj = JSON.parse(err.message);
+          if (errorObj.detail && Array.isArray(errorObj.detail)) {
+            const validationErrors = errorObj.detail
+              .map((detail: any) => detail.msg)
+              .join(', ');
+            errorMessage = validationErrors;
+          }
+        } catch {
+          // If not JSON, use the original message
+        }
+        
+        setError(errorMessage);
+      } else {
+        setError('An error occurred');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };  const quickLogin = (testEmail: string) => {
     setEmail(testEmail);
     setPassword('password');
   };
 
+  const features = [
+    {
+      icon: Bot,
+      title: "AI-Powered Agents",
+      description: "Autonomous task execution with intelligent decision making",
+      gradient: "from-primary to-secondary"
+    },
+    {
+      icon: Zap,
+      title: "Instant Automation",
+      description: "80%+ task automation with real-time processing",
+      gradient: "from-accent to-warning"
+    },
+    {
+      icon: TrendingUp,
+      title: "Smart Analytics",
+      description: "Advanced insights and performance optimization",
+      gradient: "from-success to-accent"
+    }
+  ];
+
+  const demoAccounts = [
+    { email: 'younus.s@techsophy.com', name: 'Younus', role: 'Project Manager', variant: 'default' as const },
+    { email: 'ba@test', name: 'Test BA', role: 'Business Analyst', variant: 'secondary' as const },
+    { email: 'dev@test', name: 'Test Dev', role: 'Developer', variant: 'success' as const },
+    { email: 'reviewer@test', name: 'Test Reviewer', role: 'Code Reviewer', variant: 'warning' as const },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-techsophy-50 via-white to-accent-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
         
         {/* Left Side - Branding & Features */}
-        <div className="space-y-8 text-center lg:text-left">
-          <div className="space-y-4">
-            <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <img 
-                src="/techsophy-logo.svg" 
-                alt="TechSophy" 
-                className="h-12 w-auto text-techsophy-600 dark:text-white"
-              />
+        <div className="space-y-12 text-center lg:text-left">
+          {/* Header */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-center lg:justify-start space-x-4">
+              <div className="relative">
+                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg">
+                  <Sparkles className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-accent rounded-full animate-pulse"></div>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Keystone AI
+                </h1>
+                <p className="text-sm text-muted-foreground">Intelligent Development Platform</p>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-neutral-900 dark:text-white">
-                Intelligent Development
+            <div className="space-y-4">
+              <h2 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+                Build Smarter
+                <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                  with AI Agents
+                </span>
               </h2>
-              <p className="text-xl text-neutral-600 dark:text-neutral-400">
-                Automate your entire SDLC with AI agents
+              <p className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Transform your development workflow with autonomous AI agents that handle tasks, 
+                make decisions, and optimize your entire SDLC.
               </p>
             </div>
           </div>
 
-          {/* Feature Highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card variant="glass" className="p-4 text-center">
-              <div className="p-2 bg-techsophy-100 dark:bg-techsophy-900 rounded-lg w-fit mx-auto mb-3">
-                <Bot className="w-6 h-6 text-techsophy-600 dark:text-techsophy-400" />
-              </div>
-              <h3 className="font-semibold text-neutral-900 dark:text-white">AI Agents</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Autonomous task execution
-              </p>
-            </Card>
-            
-            <Card variant="glass" className="p-4 text-center">
-              <div className="p-2 bg-accent-100 dark:bg-accent-900 rounded-lg w-fit mx-auto mb-3">
-                <Zap className="w-6 h-6 text-accent-600 dark:text-accent-400" />
-              </div>
-              <h3 className="font-semibold text-neutral-900 dark:text-white">Automation</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                80%+ task automation
-              </p>
-            </Card>
-            
-            <Card variant="glass" className="p-4 text-center">
-              <div className="p-2 bg-success-100 dark:bg-success-900 rounded-lg w-fit mx-auto mb-3">
-                <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
-              </div>
-              <h3 className="font-semibold text-neutral-900 dark:text-white">Intelligence</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Smart decision making
-              </p>
-            </Card>
+          {/* Feature Cards */}
+          <div className="space-y-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="group p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/20 hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-3 bg-gradient-to-br ${feature.gradient} rounded-xl shadow-md group-hover:shadow-lg transition-shadow`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-center lg:justify-start space-x-8">
+          <div className="grid grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-techsophy-600 dark:text-techsophy-400">247</div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">Tasks Automated</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                247+
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Tasks Automated</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-accent-600 dark:text-accent-400">92%</div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">Success Rate</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-accent to-warning bg-clip-text text-transparent">
+                94%
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Success Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-success-600 dark:text-success-400">15</div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">Active Projects</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-success to-accent bg-clip-text text-transparent">
+                15+
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Active Projects</div>
             </div>
           </div>
         </div>
 
         {/* Right Side - Login Form */}
-        <Card variant="elevated" className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <img 
-              src="/techsophy-logo.svg" 
-              alt="TechSophy" 
-              className="h-10 w-auto mx-auto mb-4 text-techsophy-600 dark:text-white"
-            />
-            <h3 className="text-2xl font-bold text-neutral-900 dark:text-white">
-              Welcome Back
-            </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-2">
-              Sign in to your TechSophy account
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus-ring dark:bg-neutral-800 dark:text-white"
-                placeholder="Enter your email"
-              />
+        <div className="w-full max-w-md mx-auto">
+          <div className="card-modern p-8 space-y-8">
+            {/* Form Header */}
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="p-2 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">
+                    {isRegistering ? 'Create Account' : 'Welcome Back'}
+                  </h3>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                {isRegistering 
+                  ? 'Fill in your details to get started with Keystone AI'
+                  : 'Sign in to access your intelligent development platform'
+                }
+              </p>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus-ring dark:bg-neutral-800 dark:text-white"
-                placeholder="Enter your password"
-              />
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                {isRegistering && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="firstName" className="block text-sm font-semibold text-foreground mb-3">
+                          First Name
+                        </label>
+                        <input
+                          id="firstName"
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="input-modern"
+                          placeholder="Enter your first name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="lastName" className="block text-sm font-semibold text-foreground mb-3">
+                          Last Name
+                        </label>
+                        <input
+                          id="lastName"
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="input-modern"
+                          placeholder="Enter your last name"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="username" className="block text-sm font-semibold text-foreground mb-3">
+                        Username
+                      </label>
+                      <input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="input-modern"
+                        placeholder="Choose a username"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-3">
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-modern"
+                    placeholder="Enter your email address"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-3">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-modern"
+                    placeholder="Enter your password"
+                    autoComplete={isRegistering ? "new-password" : "current-password"}
+                    required
+                  />
+                  {isRegistering && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Password must contain at least one uppercase letter
+                    </p>
+                  )}
+                </div>
+
+                {isRegistering && (
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-3">
+                      Confirm Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="input-modern"
+                      placeholder="Confirm your password"
+                      autoComplete="new-password"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="flex items-center space-x-3 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-4 rounded-xl">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">{error}</span>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 text-base font-semibold btn-primary"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>{isRegistering ? 'Creating Account...' : 'Signing In...'}</span>
+                  </div>
+                ) : (
+                  isRegistering ? 'Create Account' : 'Sign In'
+                )}
+              </Button>
+            </form>
+
+            {/* Toggle between Login and Register */}
+            <div className="text-center pt-4">
+              <p className="text-sm text-muted-foreground">
+                {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegistering(!isRegistering);
+                    setError('');
+                    // Reset form fields when switching
+                    setEmail('');
+                    setPassword('');
+                    setFirstName('');
+                    setLastName('');
+                    setUsername('');
+                    setConfirmPassword('');
+                  }}
+                  className="text-primary hover:text-primary/80 font-semibold transition-colors"
+                >
+                  {isRegistering ? 'Sign In' : 'Create Account'}
+                </button>
+              </p>
             </div>
 
-            {error && (
-              <div className="flex items-center space-x-2 text-error-600 dark:text-error-400 text-sm bg-error-50 dark:bg-error-900/20 p-3 rounded-lg">
-                <AlertCircle className="w-4 h-4" />
-                <span>{error}</span>
+            {/* Demo Accounts - Only show in login mode */}
+            {!isRegistering && (
+              <div className="space-y-6 pt-6 border-t border-border">
+                <div className="flex items-center justify-center space-x-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">Demo Accounts</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {demoAccounts.map((account, index) => (
+                    <button
+                      key={index}
+                      onClick={() => quickLogin(account.email)}
+                      className="p-4 text-left rounded-xl border border-border hover:border-primary/30 hover:bg-accent/5 transition-all duration-200 group"
+                    >
+                      <div className="space-y-2">
+                        <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {account.name}
+                        </div>
+                        <Badge variant={account.variant} className="text-xs">
+                          {account.role}
+                        </Badge>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    All demo accounts use password: 
+                    <code className="mx-1 px-2 py-1 bg-muted rounded font-mono text-foreground">
+                      password
+                    </code>
+                  </p>
+                </div>
               </div>
             )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={isLoading}
-              className="w-full"
-            >
-              Sign In
-            </Button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-              <p className="font-medium mb-3">Demo Accounts - Quick Login:</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('younus.s@techsophy.com')}
-                className="text-left justify-start p-3"
-              >
-                <div>
-                  <div className="font-medium">Younus (PM)</div>
-                  <Badge variant="techsophy" size="sm">Project Manager</Badge>
+            {/* Debug Panel */}
+            {showDebug && (
+              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-gray-900">Debug Information</h4>
+                  <button
+                    onClick={() => setShowDebug(!showDebug)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Hide
+                  </button>
                 </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('ba@test')}
-                className="text-left justify-start p-3"
-              >
-                <div>
-                  <div className="font-medium">Test BA</div>
-                  <Badge variant="info" size="sm">Business Analyst</Badge>
+                
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center space-x-2">
+                    {apiStatus === 'success' ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : apiStatus === 'error' ? (
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <Wifi className="w-4 h-4 text-yellow-600 animate-pulse" />
+                    )}
+                    <span className="text-gray-600">
+                      API Status: <span className="font-semibold">{apiStatus}</span>
+                    </span>
+                  </div>
+                  
+                  <div className="text-gray-600">
+                    API Base URL: <code className="bg-gray-100 px-1 rounded">{config.api.baseUrl}</code>
+                  </div>
+                  
+                  <div className="text-gray-600">
+                    Mock Data: <span className="font-semibold">{config.features.enableMockData ? 'Enabled' : 'Disabled'}</span>
+                  </div>
+                  
+                  <div className="text-gray-600">
+                    Registration Endpoint: <code className="bg-gray-100 px-1 rounded">{config.auth.register}</code>
+                  </div>
+                  
+                  <div className="text-gray-600">
+                    Login Endpoint: <code className="bg-gray-100 px-1 rounded">{config.auth.login}</code>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-300">
+                    <button
+                      onClick={async () => {
+                        console.log('Testing CORS preflight...');
+                        const corsTest = await ApiHealthService.testCorsPreflightRequest();
+                        console.log('CORS test result:', corsTest);
+                        alert(`CORS Test: ${corsTest.status} - ${corsTest.message}`);
+                      }}
+                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded mr-2"
+                    >
+                      Test CORS
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        console.log('Testing registration endpoint...');
+                        const testData = {
+                          email: "test@example.com",
+                          username: "testuser123",
+                          first_name: "Test",
+                          last_name: "User",
+                          password: "TestPass123!"
+                        };
+                        const regTest = await ApiHealthService.testRegistrationEndpoint(testData);
+                        console.log('Registration test result:', regTest);
+                        alert(`Registration Test: ${regTest.status} - ${regTest.message}`);
+                      }}
+                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded"
+                    >
+                      Test Registration
+                    </button>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-300 text-xs text-orange-600">
+                    <div className="flex items-start space-x-1">
+                      <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>CORS Issue?</strong> If registration fails, your API server needs to allow cross-origin requests from <code>http://localhost:5173</code>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('dev@test')}
-                className="text-left justify-start p-3"
-              >
-                <div>
-                  <div className="font-medium">Test Dev</div>
-                  <Badge variant="success" size="sm">Developer</Badge>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('reviewer@test')}
-                className="text-left justify-start p-3"
-              >
-                <div>
-                  <div className="font-medium">Test Reviewer</div>
-                  <Badge variant="warning" size="sm">Code Reviewer</Badge>
-                </div>
-              </Button>
-            </div>
-            
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-3 text-center">
-              All demo accounts use password: <code className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded">password</code>
-            </p>
+              </div>
+            )}
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

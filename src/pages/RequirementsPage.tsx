@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Send, FileText, Loader, Sparkles, CheckCircle, XCircle } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { mockProjects, mockEpics, mockStories, mockTasks, mockRequirementAnalyses } from '../data/mockData';
 import { RequirementAnalysis } from '../types';
 
@@ -188,13 +188,13 @@ export function RequirementsPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-gray-600 dark:text-gray-400">Priority:</span>
-                      <Badge variant="warning" size="sm" className="ml-2">
+                      <Badge variant="warning" className="ml-2">
                         {analysisResult.extractedEntities.priority}
                       </Badge>
                     </div>
                     <div>
                       <span className="text-gray-600 dark:text-gray-400">Complexity:</span>
-                      <Badge variant="info" size="sm" className="ml-2">
+                      <Badge variant="info" className="ml-2">
                         {analysisResult.extractedEntities.complexity}
                       </Badge>
                     </div>
@@ -202,7 +202,7 @@ export function RequirementsPage() {
                       <span className="text-gray-600 dark:text-gray-400">Features:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {analysisResult.extractedEntities.features.map((feature: string, index: number) => (
-                          <Badge key={index} variant="default" size="sm">
+                          <Badge key={index} variant="default">
                             {feature}
                           </Badge>
                         ))}
@@ -225,7 +225,7 @@ export function RequirementsPage() {
                           </h4>
                           <div className="flex items-center space-x-2">
                             <Badge variant="info">{epic.priority}</Badge>
-                            <Badge variant="agent" size="sm">
+                            <Badge variant="agent">
                               {Math.round(epic.confidence * 100)}%
                             </Badge>
                           </div>
@@ -245,8 +245,8 @@ export function RequirementsPage() {
                                     📝 Story: {story.title}
                                   </h5>
                                   <div className="flex items-center space-x-1">
-                                    <Badge variant="warning" size="sm">{story.priority}</Badge>
-                                    <Badge variant="agent" size="sm">
+                                    <Badge variant="warning">{story.priority}</Badge>
+                                    <Badge variant="agent">
                                       {Math.round(story.confidence * 100)}%
                                     </Badge>
                                   </div>
@@ -280,14 +280,14 @@ export function RequirementsPage() {
                                           ⚡ {task.title}
                                         </span>
                                         <div className="flex space-x-1">
-                                          <Badge variant="default" size="sm">
+                                          <Badge variant="default">
                                             {task.estimatedHours}h
                                           </Badge>
-                                          <Badge variant={task.component === 'backend' ? 'agent' : 'human'} size="sm">
+                                          <Badge variant={task.component === 'backend' ? 'agent' : 'human'}>
                                             {task.component}
                                           </Badge>
                                           {task.isAgentAssigned && (
-                                            <Badge variant="agent" size="sm">Agent</Badge>
+                                            <Badge variant="agent">Agent</Badge>
                                           )}
                                         </div>
                                       </div>
@@ -328,7 +328,7 @@ export function RequirementsPage() {
                       Reject
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="default"
                       icon={CheckCircle}
                       onClick={handleAcceptAnalysis}
                     >
@@ -367,12 +367,12 @@ export function RequirementsPage() {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="agent" size="sm">
+                      <Badge variant="agent">
                         {Math.round(analysis.confidence * 100)}%
                       </Badge>
                       <Badge 
                         variant={analysis.feedback === 'accepted' ? 'success' : 'error'} 
-                        size="sm"
+                       
                       >
                         {analysis.feedback}
                       </Badge>

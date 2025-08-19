@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
+import { authService, RegisterRequest } from '../services/authService';
+import { config } from '../config';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterRequest) => Promise<boolean>;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   isLoading: boolean;
@@ -23,8 +26,8 @@ const mockUsers: User[] = [
 const rolePermissions: Record<UserRole, string[]> = {
   PM: ['create_requirements', 'edit_requirements', 'view_all', 'manage_permissions', 'approve_high_risk'],
   BA: ['create_requirements', 'edit_requirements', 'view_all'],
+  Developer: ['view_all', 'edit_code'],
   Reviewer: ['view_all', 'approve_actions', 'escalate_actions'],
-  Viewer: ['view_all'],
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -33,32 +36,113 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for stored auth
-    const storedUser = localStorage.getItem('auth_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const currentUser = authService.getCurrentUser();
+    if (currentUser && authService.isAuthenticated()) {
+      // Map API user to our User type
+      const mappedUser: User = {
+        id: currentUser.id,
+        email: currentUser.email,
+        name: `${currentUser.first_name} ${currentUser.last_name}`,
+        role: 'PM', // Default role, could be determined from API response
+        avatar: undefined,
+      };
+      setUser(mappedUser);
+    } else {
+      // Fallback to local storage for mock mode
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (emailOrUsername: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Mock authentication - in real app, this would be an API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('auth_user', JSON.stringify(foundUser));
+    try {
+      // Use mock data if enabled in config, otherwise use real API
+      if (config.features.enableMockData) {
+        // Mock authentication
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const foundUser = mockUsers.find(u => u.email === emailOrUsername);
+        if (foundUser && password === 'password') {
+          setUser(foundUser);
+          localStorage.setItem('auth_user', JSON.stringify(foundUser));
+          setIsLoading(false);
+          return true;
+        }
+        setIsLoading(false);
+        return false;
+      } else {
+        // Real API authentication - use email/username as username field
+        const response = await authService.login({ username: emailOrUsername, password });
+        const mappedUser: User = {
+          id: response.user.id,
+          email: response.user.email,
+          name: `${response.user.first_name} ${response.user.last_name}`,
+          role: 'PM', // Default role, could be determined from API response
+          avatar: undefined,
+        };
+        setUser(mappedUser);
+        setIsLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
       setIsLoading(false);
-      return true;
+      return false;
     }
+  };
+
+  const register = async (userData: RegisterRequest): Promise<boolean> => {
+    setIsLoading(true);
     
-    setIsLoading(false);
-    return false;
+    try {
+      // Use mock data if enabled in config, otherwise use real API
+      if (config.features.enableMockData) {
+        // Mock registration - simulate delay and success
+        console.log('AuthContext: Using mock registration for:', { ...userData, password: '***' });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const mockUser: User = {
+          id: Date.now().toString(),
+          email: userData.email,
+          name: `${userData.first_name} ${userData.last_name}`,
+          role: 'PM',
+          avatar: undefined,
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('auth_user', JSON.stringify(mockUser));
+        setIsLoading(false);
+        return true;
+      } else {
+        // Real API registration
+        console.log('AuthContext: Starting registration with data:', { ...userData, password: '***' });
+        const response = await authService.register(userData);
+        console.log('AuthContext: Registration successful', response);
+        
+        const mappedUser: User = {
+          id: response.user.id,
+          email: response.user.email,
+          name: `${response.user.first_name} ${response.user.last_name}`,
+          role: 'PM', // Default role
+          avatar: undefined,
+        };
+        setUser(mappedUser);
+        setIsLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('AuthContext: Registration failed:', error);
+      setIsLoading(false);
+      throw error; // Re-throw so LoginPage can catch and display the error
+    }
   };
 
   const logout = () => {
+    authService.logout();
     setUser(null);
     localStorage.removeItem('auth_user');
   };
@@ -72,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user,
       login,
+      register,
       logout,
       hasPermission,
       isLoading

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Settings, CheckCircle, XCircle, RefreshCw, ExternalLink } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
 import { mockIntegrations } from '../data/mockData';
 import { Integration, IntegrationType } from '../types';
@@ -81,7 +81,7 @@ export function IntegrationsPage() {
         </div>
         
         <Button 
-          variant="primary" 
+          variant="default" 
           icon={Plus}
           onClick={() => setIsAddModalOpen(true)}
         >
@@ -146,7 +146,7 @@ export function IntegrationsPage() {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                   <Button
                     variant="ghost"
-                    size="sm"
+                   
                     icon={RefreshCw}
                     onClick={() => handleSync(integration)}
                   >
@@ -155,7 +155,7 @@ export function IntegrationsPage() {
                   <div className="flex space-x-2">
                     <Button
                       variant="ghost"
-                      size="sm"
+                     
                       icon={Settings}
                       onClick={() => {
                         setSelectedIntegration(integration);
@@ -166,7 +166,7 @@ export function IntegrationsPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                     
                       onClick={() => handleTestConnection(integration)}
                     >
                       Test
@@ -211,7 +211,7 @@ export function IntegrationsPage() {
                   </div>
                   <Button
                     variant="outline"
-                    size="sm"
+                   
                     onClick={() => {
                       setNewIntegration({
                         type: type.type,
@@ -326,7 +326,7 @@ export function IntegrationsPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={handleAddIntegration}
               disabled={!newIntegration.name.trim()}
             >
@@ -379,7 +379,7 @@ export function IntegrationsPage() {
               >
                 Cancel
               </Button>
-              <Button variant="primary">
+              <Button variant="default">
                 Save Configuration
               </Button>
             </div>

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from './button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -48,10 +48,10 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: Mod
             <Button
               variant="ghost"
               size="sm"
-              icon={X}
               onClick={onClose}
               className="p-1"
             >
+              <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </Button>
           </div>

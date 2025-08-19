@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Edit, ExternalLink, AlertCircle } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table } from '../components/ui/Table';
 import { useData } from '../contexts/DataContext';
 import { Epic, Story, Task } from '../types';
@@ -113,14 +113,14 @@ export function TaskBreakdownPage() {
       header: 'Actions',
       render: (task: Task) => (
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm" icon={Edit}>
+          <Button variant="ghost" icon={Edit}>
             Edit
           </Button>
-          <Button variant="ghost" size="sm" icon={ExternalLink}>
+          <Button variant="ghost" icon={ExternalLink}>
             View
           </Button>
           {task.isAgentAssigned && (
-            <Button variant="outline" size="sm" icon={AlertCircle}>
+            <Button variant="outline" icon={AlertCircle}>
               Review
             </Button>
           )}
@@ -168,7 +168,7 @@ export function TaskBreakdownPage() {
           <Button variant="outline" icon={ExternalLink}>
             Push to Jira
           </Button>
-          <Button variant="primary" icon={Edit}>
+          <Button variant="default" icon={Edit}>
             Edit Structure
           </Button>
         </div>
@@ -256,18 +256,18 @@ export function TaskBreakdownPage() {
                                           </p>
                                         </div>
                                         <div className="flex items-center space-x-2 ml-4">
-                                          <Badge variant={getStatusColor(task.status)} size="sm">
+                                          <Badge variant={getStatusColor(task.status)}>
                                             {task.status}
                                           </Badge>
-                                          <Badge variant={getComponentColor(task.component)} size="sm">
+                                          <Badge variant={getComponentColor(task.component)}>
                                             {task.component}
                                           </Badge>
-                                          <Badge variant={task.isAgentAssigned ? 'agent' : 'human'} size="sm">
+                                          <Badge variant={task.isAgentAssigned ? 'agent' : 'human'}>
                                             {task.isAgentAssigned ? 'Agent' : 'Human'}
                                           </Badge>
                                           <div className="flex space-x-1">
-                                            <Button variant="ghost" size="sm" icon={Edit} />
-                                            <Button variant="ghost" size="sm" icon={ExternalLink} />
+                                            <Button variant="ghost" icon={Edit} />
+                                            <Button variant="ghost" icon={ExternalLink} />
                                           </div>
                                         </div>
                                       </div>
