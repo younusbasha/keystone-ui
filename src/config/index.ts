@@ -19,11 +19,11 @@ export const config = {
 
   // Projects Endpoints
   projects: {
-    list: '/api/v1/projects',
-    create: '/api/v1/projects',
-    get: (id: string) => `/api/v1/projects/${id}`,
-    update: (id: string) => `/api/v1/projects/${id}`,
-    delete: (id: string) => `/api/v1/projects/${id}`,
+    list: '/api/v1/projects/',
+    create: '/api/v1/projects/',
+    get: (id: string) => `/api/v1/projects/${id}/`,
+    update: (id: string) => `/api/v1/projects/${id}/`,
+    delete: (id: string) => `/api/v1/projects/${id}/`,
   },
 
   // Requirements Endpoints  
