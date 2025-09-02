@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { Layout } from './shared/components/layout.tsx';
+import { Layout } from './components/layout/Layout';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './features/dashboard/dashboard-page.tsx';
-import { ProjectsPage } from './features/projects/projects-page.tsx';
-import { RequirementsPage } from './features/requirements/requirements-page.tsx';
+import { DashboardPage } from './pages/DashboardPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { RequirementsPageFunctional as RequirementsPage } from './pages/RequirementsPageFunctional';
 import { TaskBreakdownPage } from './pages/TaskBreakdownPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
 import { AgentsPage } from './pages/AgentsPage';

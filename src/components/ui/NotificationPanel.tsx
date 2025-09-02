@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, CheckCircle, AlertTriangle, Info, X, Clock } from 'lucide-react';
-import { Badge } from './Badge';
-import { Button } from './Button';
+import { Badge } from './badge';
+import { Button } from './button';
 import { formatDistanceToNow } from '../../utils/dateUtils';
 
 interface Notification {

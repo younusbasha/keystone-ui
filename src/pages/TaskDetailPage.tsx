@@ -1,16 +1,47 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Code, TestTube, Settings, MessageSquare, CheckCircle, ArrowLeft } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockTasks } from '../data/mockData';
+import { projectsService } from '../services/projectsService';
+import { Task } from '../types';
 
 export function TaskDetailPage() {
   const { taskId } = useParams();
   const [activeTab, setActiveTab] = useState('code');
+  const [task, setTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const task = mockTasks.find(t => t.id === taskId);
+  useEffect(() => {
+    const loadTask = async () => {
+      if (!taskId) return;
+      
+      setIsLoading(true);
+      try {
+        const taskData = await projectsService.getTask(taskId);
+        setTask(taskData);
+      } catch (error) {
+        console.error('Failed to load task:', error);
+        setTask(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTask();
+  }, [taskId]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading task...</p>
+        </div>
+      </div>
+    );
+  }
   
   if (!task) {
     return (
@@ -31,8 +62,9 @@ export function TaskDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" icon={ArrowLeft} onClick={() => window.history.back()}>
-          Back
+                <Button variant="ghost" onClick={() => window.history.back()}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Tasks
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -81,7 +113,7 @@ export function TaskDetailPage() {
                 Assigned To
               </label>
               <div className="mt-1">
-                <Badge variant={task.isAgentAssigned ? 'agent' : 'human'}>
+                <Badge variant={task.isAgentAssigned ? 'success' : 'default'}>
                   {task.assignedTo}
                 </Badge>
               </div>
@@ -193,7 +225,7 @@ export function TaskDetailPage() {
                   <div key={comment.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <Badge variant={comment.isHuman ? 'human' : 'agent'}>
+                        <Badge variant={comment.isHuman ? 'default' : 'success'}>
                           {comment.isHuman ? 'Human' : 'Agent'}
                         </Badge>
                         <span className="font-medium text-gray-900 dark:text-white">

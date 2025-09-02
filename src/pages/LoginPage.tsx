@@ -8,8 +8,8 @@ import { ApiHealthService } from '../services/healthService';
 import { config } from '../config';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('vaibhav@mailinator.com'); // Pre-fill with actual DB user
+  const [password, setPassword] = useState('Test@1234'); // Pre-fill with actual DB password
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -105,7 +105,11 @@ export function LoginPage() {
     }
   };  const quickLogin = (testEmail: string) => {
     setEmail(testEmail);
-    setPassword('password');
+    if (testEmail === 'vaibhav@mailinator.com') {
+      setPassword('Test@1234');
+    } else {
+      setPassword('password');
+    }
   };
 
   const features = [
@@ -130,7 +134,8 @@ export function LoginPage() {
   ];
 
   const demoAccounts = [
-    { email: 'younus.s@techsophy.com', name: 'Younus', role: 'Project Manager', variant: 'default' as const },
+    { email: 'vaibhav@mailinator.com', name: 'Vaibhav', role: 'Project Manager', variant: 'default' as const },
+    { email: 'younus.s@techsophy.com', name: 'Younus', role: 'Project Manager', variant: 'secondary' as const },
     { email: 'ba@test', name: 'Test BA', role: 'Business Analyst', variant: 'secondary' as const },
     { email: 'dev@test', name: 'Test Dev', role: 'Developer', variant: 'success' as const },
     { email: 'reviewer@test', name: 'Test Reviewer', role: 'Code Reviewer', variant: 'warning' as const },
@@ -478,6 +483,27 @@ export function LoginPage() {
                   <div className="text-gray-600">
                     Mock Data: <span className="font-semibold">{config.features.enableMockData ? 'Enabled' : 'Disabled'}</span>
                   </div>
+                  
+                  {!config.features.enableMockData && (
+                    <div className="mt-3 pt-3 border-t border-gray-300">
+                      <div className="text-gray-700 font-semibold mb-2">Demo Credentials (Real API):</div>
+                      <div className="bg-blue-50 p-2 rounded border">
+                        <div className="text-xs text-gray-600">Email: <code className="bg-white px-1 rounded">vaibhav@mailinator.com</code></div>
+                        <div className="text-xs text-gray-600 mt-1">Password: <code className="bg-white px-1 rounded">Test@1234</code></div>
+                        <div className="text-xs text-gray-500 mt-2">Note: This user is registered in the backend database</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmail('vaibhav@mailinator.com');
+                            setPassword('Test@1234');
+                          }}
+                          className="mt-2 px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded border border-blue-300 text-blue-700"
+                        >
+                          Auto-fill credentials
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="text-gray-600">
                     Registration Endpoint: <code className="bg-gray-100 px-1 rounded">{config.auth.register}</code>

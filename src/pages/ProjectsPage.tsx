@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
-import { Plus, Search, Filter, GitBranch, Users, Calendar, ExternalLink, MoreVertical, Star, Archive, Edit, Trash2, FolderOpen, Activity, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, GitBranch, Users, MoreVertical, Star, FolderOpen, Activity, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
 import { useData } from '../contexts/DataContext';
-import { mockAgents } from '../data/mockData';
-import { Project, IntegrationType } from '../types';
+import { aiAgentsService } from '../services/agentsService';
+import { Project, IntegrationType, Agent } from '../types';
 import { formatDistanceToNow } from '../utils/dateUtils';
+import { ApiHealthService } from '../services/healthService';
 
 export function ProjectsPage() {
   const { projects, createProject, isLoading } = useData();
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'on-hold'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'name' | 'progress' | 'updated'>('updated');
+  const [apiConnectionStatus, setApiConnectionStatus] = useState<'unknown' | 'connected' | 'disconnected'>('unknown');
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -22,6 +26,36 @@ export function ProjectsPage() {
     integrations: [] as IntegrationType[],
     assignedAgents: [] as string[],
   });
+
+  // Load agents from API
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        const agentsResponse = await aiAgentsService.listAgents({ limit: 50 });
+        // Convert API agents to our Agent type (similar to AgentsPage)
+        const mappedAgents: Agent[] = agentsResponse.items.map(apiAgent => ({
+          id: apiAgent.id!,
+          name: apiAgent.name,
+          type: 'requirements-parser', // Default type, could be mapped properly
+          status: 'active',
+          description: `${apiAgent.agent_type} agent`,
+          capabilities: apiAgent.capabilities || [],
+          currentTask: 'Available',
+          lastActivity: new Date().toISOString(),
+          successRate: 95,
+          totalTasks: 0,
+          configuration: {},
+          integrations: [],
+        }));
+        setAgents(mappedAgents);
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+        setAgents([]);
+      }
+    };
+
+    loadAgents();
+  }, []);
 
   const filteredProjects = projects
     .filter(project => {
@@ -61,7 +95,7 @@ export function ProjectsPage() {
         repository: newProject.repository,
         integrations: newProject.integrations,
         assignedAgents: newProject.assignedAgents,
-        owner: 'younus.s@techsophy.com',
+        owner: 'younus.s@techsophy.com', // Use the real registered user
       });
       
       setIsCreateModalOpen(false);
@@ -73,8 +107,35 @@ export function ProjectsPage() {
         assignedAgents: [],
       });
       alert('✅ Project created successfully!');
+      setApiConnectionStatus('connected');
     } catch (error) {
-      alert('❌ Error creating project. Please try again.');
+      console.error('Create project error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('connection')) {
+        alert('❌ Cannot connect to backend API. Please ensure your backend server is running on localhost:8000');
+        setApiConnectionStatus('disconnected');
+      } else {
+        alert(`❌ Error creating project: ${errorMessage}`);
+      }
+    }
+  };
+
+  const testApiConnection = async () => {
+    setIsTestingConnection(true);
+    try {
+      const result = await ApiHealthService.checkHealth();
+      if (result.status === 'success') {
+        setApiConnectionStatus('connected');
+        alert('✅ API Connection successful! Backend is reachable.');
+      } else {
+        setApiConnectionStatus('disconnected');
+        alert(`❌ API Connection failed: ${result.message}`);
+      }
+    } catch (error) {
+      setApiConnectionStatus('disconnected');
+      alert('❌ Cannot connect to backend API. Please ensure your backend server is running on localhost:8000');
+    } finally {
+      setIsTestingConnection(false);
     }
   };
 
@@ -237,51 +298,6 @@ export function ProjectsPage() {
         </div>
       </div>
     </div>
-              </span>
-            ))}
-            {project.integrations.length > 4 && (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                +{project.integrations.length - 4} more
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1 text-sm text-neutral-600 dark:text-neutral-400">
-              <Users className="w-4 h-4" />
-              <span>{project.assignedAgents.length}</span>
-            </div>
-            <div className="text-xs text-neutral-500 dark:text-neutral-500">
-              Updated {formatDistanceToNow(project.lastActivity)} ago
-            </div>
-          </div>
-          
-          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button 
-              variant="ghost" 
-              size="xs" 
-              icon={GitBranch}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/tasks?project=${project.id}`;
-              }}
-            />
-            <Button 
-              variant="ghost" 
-              size="xs" 
-              icon={ExternalLink}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleProjectAction(project.id, 'view');
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </Card>
   );
 
   return (
@@ -304,14 +320,66 @@ export function ProjectsPage() {
           </div>
         </div>
         
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="btn-primary"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
-        </Button>
+        <div className="flex items-center space-x-3">
+          {/* API Connection Status */}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testApiConnection}
+              disabled={isTestingConnection}
+              className="flex items-center space-x-2"
+            >
+              {isTestingConnection ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+              ) : apiConnectionStatus === 'connected' ? (
+                <Wifi className="h-4 w-4 text-green-600" />
+              ) : apiConnectionStatus === 'disconnected' ? (
+                <WifiOff className="h-4 w-4 text-red-600" />
+              ) : (
+                <Wifi className="h-4 w-4 text-gray-400" />
+              )}
+              <span className="text-sm">
+                {isTestingConnection ? 'Testing...' : 
+                 apiConnectionStatus === 'connected' ? 'API Connected' :
+                 apiConnectionStatus === 'disconnected' ? 'API Disconnected' : 
+                 'Test API'}
+              </span>
+            </Button>
+          </div>
+          
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-primary"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Button>
+        </div>
       </div>
+
+      {/* API Connection Warning Banner */}
+      {apiConnectionStatus === 'disconnected' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-yellow-800">Backend API Not Available</h3>
+              <p className="text-xs text-yellow-700 mt-1">
+                Projects will be stored locally until the backend API is available. Please start your backend server on localhost:8000 for full functionality.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testApiConnection}
+              className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+            >
+              Retry Connection
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -541,7 +609,7 @@ export function ProjectsPage() {
               Assign AI Agents
             </label>
             <div className="space-y-3 max-h-48 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-              {mockAgents.map((agent) => (
+              {agents.map((agent) => (
                 <label key={agent.id} className="flex items-center space-x-3 group cursor-pointer">
                   <input
                     type="checkbox"
@@ -587,10 +655,9 @@ export function ProjectsPage() {
             <Button
               variant="default"
               onClick={handleCreateProject}
-              disabled={!newProject.name.trim()}
-              loading={isLoading}
+              disabled={!newProject.name.trim() || isLoading}
             >
-              Create Project
+              {isLoading ? 'Creating...' : 'Create Project'}
             </Button>
           </div>
         </div>

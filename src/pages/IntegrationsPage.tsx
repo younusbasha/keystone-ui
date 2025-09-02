@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Settings, CheckCircle, XCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '../components/ui/Modal';
-import { mockIntegrations } from '../data/mockData';
+import { integrationsService } from '../services/integrationsService';
 import { Integration, IntegrationType } from '../types';
 import { formatDistanceToNow } from '../utils/dateUtils';
 
 export function IntegrationsPage() {
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -17,6 +19,24 @@ export function IntegrationsPage() {
     name: '',
     configuration: {} as Record<string, any>,
   });
+
+  // Load integrations from API
+  useEffect(() => {
+    const loadIntegrations = async () => {
+      setIsLoading(true);
+      try {
+        const integrationsResponse = await integrationsService.listIntegrations({ limit: 50 });
+        setIntegrations(integrationsResponse.items);
+      } catch (error) {
+        console.error('Failed to load integrations:', error);
+        setIntegrations([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadIntegrations();
+  }, []);
 
   const integrationTypes = [
     { type: 'github', name: 'GitHub', icon: '🐙', description: 'Source code management and version control' },
@@ -89,14 +109,24 @@ export function IntegrationsPage() {
         </Button>
       </div>
 
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading integrations...</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Connected Integrations */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockIntegrations.map((integration) => {
+        {integrations.map((integration) => {
           const typeInfo = integrationTypes.find(t => t.type === integration.type);
           const StatusIcon = getStatusIcon(integration.status);
           
           return (
-            <Card key={integration.id} hoverable className="p-6">
+            <Card key={integration.id} className="p-6 hover:shadow-md transition-shadow">
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
@@ -146,22 +176,20 @@ export function IntegrationsPage() {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                   <Button
                     variant="ghost"
-                   
-                    icon={RefreshCw}
                     onClick={() => handleSync(integration)}
                   >
+                    <RefreshCw className="w-4 h-4 mr-2" />
                     Sync
                   </Button>
                   <div className="flex space-x-2">
                     <Button
                       variant="ghost"
-                     
-                      icon={Settings}
                       onClick={() => {
                         setSelectedIntegration(integration);
                         setIsConfigModalOpen(true);
                       }}
                     >
+                      <Settings className="w-4 h-4 mr-2" />
                       Configure
                     </Button>
                     <Button
@@ -192,7 +220,7 @@ export function IntegrationsPage() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {integrationTypes
-              .filter(type => !mockIntegrations.some(int => int.type === type.type))
+              .filter(type => !integrations.some(int => int.type === type.type))
               .map((type) => (
                 <div
                   key={type.type}
@@ -214,7 +242,7 @@ export function IntegrationsPage() {
                    
                     onClick={() => {
                       setNewIntegration({
-                        type: type.type,
+                        type: type.type as IntegrationType,
                         name: type.name,
                         configuration: {},
                       });
@@ -386,6 +414,8 @@ export function IntegrationsPage() {
           </div>
         )}
       </Modal>
+      </>
+      )}
     </div>
   );
 }

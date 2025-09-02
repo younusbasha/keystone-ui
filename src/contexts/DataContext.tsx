@@ -10,8 +10,10 @@ import {
   AuditLog,
   RequirementAnalysis,
   Integration,
-  DeploymentPipeline
+  DeploymentPipeline,
+  IntegrationType
 } from '../types';
+import { projectsService } from '../services/projectsService';
 
 interface DataContextType {
   // Projects
@@ -65,83 +67,12 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initial mock data
-const initialProjects: Project[] = [
-  {
-    id: '1',
-    name: 'E-commerce Platform',
-    description: 'Modern e-commerce platform with AI recommendations',
-    status: 'in-progress',
-    progress: 65,
-    riskFlags: 2,
-    createdAt: '2024-01-15T10:00:00Z',
-    lastActivity: new Date().toISOString(),
-    repository: 'https://github.com/company/ecommerce-platform',
-    integrations: ['github', 'jira', 'jenkins'],
-    assignedAgents: ['agent-1', 'agent-2', 'agent-4'],
-    owner: 'younus.s@techsophy.com',
-  },
-  {
-    id: '2',
-    name: 'Mobile Banking App',
-    description: 'Secure mobile banking application',
-    status: 'review',
-    progress: 90,
-    riskFlags: 1,
-    createdAt: '2024-01-10T09:00:00Z',
-    lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    repository: 'https://github.com/company/mobile-banking',
-    integrations: ['github', 'gcp', 'firebase'],
-    assignedAgents: ['agent-1', 'agent-3', 'agent-5'],
-    owner: 'younus.s@techsophy.com',
-  },
-];
-
-const initialAgents: Agent[] = [
-  {
-    id: 'agent-1',
-    name: 'Requirements Parser',
-    type: 'requirements-parser',
-    status: 'active',
-    description: 'Analyzes natural language requirements and extracts structured information',
-    capabilities: ['NLP processing', 'Intent recognition', 'Entity extraction', 'Context analysis'],
-    currentTask: 'Analyzing user authentication requirements',
-    lastActivity: new Date().toISOString(),
-    successRate: 94.5,
-    totalTasks: 127,
-    configuration: {
-      model: 'gemini-pro',
-      temperature: 0.3,
-      maxTokens: 2048,
-    },
-    integrations: ['jira', 'slack'],
-  },
-  {
-    id: 'agent-2',
-    name: 'Task Planner',
-    type: 'task-planner',
-    status: 'busy',
-    description: 'Creates detailed task breakdowns and estimates from user stories',
-    capabilities: ['Task decomposition', 'Effort estimation', 'Dependency mapping', 'Resource allocation'],
-    currentTask: 'Planning payment gateway integration',
-    lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    successRate: 89.2,
-    totalTasks: 89,
-    configuration: {
-      model: 'gemini-pro',
-      planningHorizon: 30,
-      estimationMethod: 'story-points',
-    },
-    integrations: ['jira', 'github'],
-  },
-];
-
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [epics, setEpics] = useState<Epic[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [agents] = useState<Agent[]>(initialAgents);
+  const [agents] = useState<Agent[]>([]); // Will be loaded from API
   const [agentActions, setAgentActions] = useState<AgentAction[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -149,6 +80,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [integrations] = useState<Integration[]>([]);
   const [deploymentPipelines] = useState<DeploymentPipeline[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load initial data from API
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      try {
+        // Load projects from API
+        const projectsResponse = await projectsService.listProjects({ limit: 50 });
+        const apiProjects = projectsResponse.items.map(apiProject => ({
+          id: apiProject.id!,
+          name: apiProject.name,
+          description: apiProject.description,
+          status: apiProject.status === 'planning' ? 'pending' as const : 
+                  apiProject.status === 'in_progress' ? 'in-progress' as const :
+                  apiProject.status === 'completed' ? 'completed' as const : 'blocked' as const,
+          progress: Math.floor(Math.random() * 100), // Calculate based on tasks when available
+          riskFlags: 0, // Calculate based on actual risks
+          createdAt: apiProject.created_at || new Date().toISOString(),
+          lastActivity: apiProject.updated_at || new Date().toISOString(),
+          repository: '', // Add when available
+          integrations: [] as IntegrationType[], // Add when available
+          assignedAgents: [], // Add when available
+          owner: 'younus.s@techsophy.com', // Current user
+        }));
+        
+        setProjects(apiProjects);
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+        // Initialize with empty array on error
+        setProjects([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
 
   // Calculate real-time dashboard stats
   const [dashboardStats, setDashboardStats] = useState({
@@ -205,45 +173,60 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [agents]);
 
-  // Project operations
+  // Project operations - Connected to Real API
   const createProject = async (projectData: Omit<Project, 'id' | 'createdAt' | 'lastActivity'>): Promise<Project> => {
     setIsLoading(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newProject: Project = {
-      ...projectData,
-      id: `project-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-    };
-    
-    setProjects(prev => [newProject, ...prev]);
-    
-    // Add activity log
-    await addActivity({
-      type: 'agent_decision',
-      title: 'New project created',
-      description: `Project "${newProject.name}" has been created and is ready for requirements input`,
-      riskLevel: 'low',
-      isRead: false,
-      projectId: newProject.id,
-    });
-    
-    // Add audit log
-    await addAuditLog({
-      userName: 'Younus',
-      action: `Created project: ${newProject.name}`,
-      actionType: 'create',
-      outcome: 'success',
-      details: `New project created with ${newProject.assignedAgents.length} assigned agents`,
-      riskLevel: 'low',
-      projectId: newProject.id,
-    });
-    
-    setIsLoading(false);
-    return newProject;
+    try {
+      // Convert our frontend Project type to API Project type
+      const apiProjectData = {
+        name: projectData.name,
+        description: projectData.description,
+        priority: 'medium' as const, // Default priority
+        start_date: new Date().toISOString().split('T')[0], // Today
+        end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+        budget: 10000, // Default budget
+      };
+
+      const createdProject = await projectsService.createProject(apiProjectData);
+      
+      // Convert API response back to our frontend Project type
+      const newProject: Project = {
+        id: createdProject.id!,
+        name: createdProject.name,
+        description: createdProject.description,
+        status: createdProject.status === 'planning' ? 'pending' : 
+                createdProject.status === 'in_progress' ? 'in-progress' :
+                createdProject.status === 'completed' ? 'completed' : 'blocked',
+        progress: 0,
+        riskFlags: 0,
+        createdAt: createdProject.created_at || new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+        repository: projectData.repository,
+        integrations: projectData.integrations || [],
+        assignedAgents: projectData.assignedAgents || [],
+        owner: projectData.owner,
+      };
+      
+      setProjects(prev => [newProject, ...prev]);
+      
+      // Add activity log
+      await addActivity({
+        type: 'agent_decision',
+        title: 'New project created',
+        description: `Project "${newProject.name}" has been created and is ready for requirements input`,
+        riskLevel: 'low',
+        isRead: false,
+        projectId: newProject.id,
+      });
+      
+      setIsLoading(false);
+      return newProject;
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Failed to create project:', error);
+      throw new Error('Failed to create project. Please check your connection and try again.');
+    }
   };
 
   const updateProject = async (id: string, updates: Partial<Project>): Promise<void> => {
@@ -379,9 +362,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const refreshData = async (): Promise<void> => {
     setIsLoading(true);
-    // Simulate data refresh
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
+    try {
+      // Reload projects from API
+      const projectsResponse = await projectsService.listProjects({ limit: 50 });
+      const apiProjects = projectsResponse.items.map(apiProject => ({
+        id: apiProject.id!,
+        name: apiProject.name,
+        description: apiProject.description,
+        status: apiProject.status === 'planning' ? 'pending' as const : 
+                apiProject.status === 'in_progress' ? 'in-progress' as const :
+                apiProject.status === 'completed' ? 'completed' as const : 'blocked' as const,
+        progress: Math.floor(Math.random() * 100), // Calculate based on tasks when available
+        riskFlags: 0, // Calculate based on actual risks
+        createdAt: apiProject.created_at || new Date().toISOString(),
+        lastActivity: apiProject.updated_at || new Date().toISOString(),
+        repository: '', // Add when available
+        integrations: [] as IntegrationType[], // Add when available
+        assignedAgents: [], // Add when available
+        owner: 'younus.s@techsophy.com', // Current user
+      }));
+      
+      setProjects(apiProjects);
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

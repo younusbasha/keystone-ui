@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { SimplifiedWorkflow } from '../components/ui/SimplifiedWorkflow';
 import { ProgressiveDisclosure } from '../components/ui/ProgressiveDisclosure';
 import { FeedbackCapture } from '../components/feedback/FeedbackCapture';
-import { mockProjects } from '../data/mockData';
+import { useData } from '../contexts/DataContext';
 
 export function SimplifiedRequirementsPage() {
+  const { projects } = useData();
   const [requirement, setRequirement] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
   const [currentPhase, setCurrentPhase] = useState<'input' | 'analysis' | 'review' | 'complete'>('input');
@@ -126,7 +127,7 @@ export function SimplifiedRequirementsPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
                   >
                     <option value="">Select a project</option>
-                    {mockProjects.map((project) => (
+                    {projects.map((project) => (
                       <option key={project.id} value={project.id}>
                         {project.name}
                       </option>
