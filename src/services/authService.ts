@@ -18,7 +18,7 @@ export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  expires_in: number;
+  expires_in?: number; // Make optional since backend sometimes doesn't return it
 }
 
 export interface UserResponse {
@@ -39,7 +39,7 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  expires_in: number;
+  expires_in: number; // Default to 1800 if not provided
   user: UserResponse;
 }
 
@@ -223,8 +223,38 @@ class ApiClient {
     }
 
     console.log('ApiClient: Internal token refresh');
+    
+    // Use the same robust approach as the main refresh method
     const refreshEndpoint = `/api/v1/auth/refresh?refresh_token=${encodeURIComponent(refreshToken)}`;
-    const loginResponse = await this.post<LoginResponse>(refreshEndpoint, undefined, false);
+    const url = getApiUrl(refreshEndpoint);
+    const token = localStorage.getItem('access_token');
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      mode: 'cors',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Internal refresh failed: ${response.status}`);
+    }
+    
+    const responseText = await response.text();
+    let loginResponse: LoginResponse;
+    try {
+      loginResponse = JSON.parse(responseText);
+    } catch {
+      throw new Error('Invalid internal refresh response format');
+    }
+    
+    if (!loginResponse.access_token) {
+      throw new Error('No access token in internal refresh response');
+    }
     
     // Get user profile with new token
     localStorage.setItem('access_token', loginResponse.access_token);
@@ -232,9 +262,9 @@ class ApiClient {
     
     const authResponse: AuthResponse = {
       access_token: loginResponse.access_token,
-      refresh_token: loginResponse.refresh_token,
-      token_type: loginResponse.token_type,
-      expires_in: loginResponse.expires_in,
+      refresh_token: loginResponse.refresh_token || refreshToken,
+      token_type: loginResponse.token_type || 'bearer',
+      expires_in: loginResponse.expires_in || 1800, // Default to 30 minutes
       user: userResponse
     };
     
@@ -272,7 +302,7 @@ class AuthService extends ApiClient {
         access_token: loginResponse.access_token,
         refresh_token: loginResponse.refresh_token,
         token_type: loginResponse.token_type,
-        expires_in: loginResponse.expires_in,
+        expires_in: loginResponse.expires_in || 1800, // Default to 30 minutes
         user: userResponse
       };
       
@@ -310,7 +340,7 @@ class AuthService extends ApiClient {
         access_token: loginResponse.access_token,
         refresh_token: loginResponse.refresh_token,
         token_type: loginResponse.token_type,
-        expires_in: loginResponse.expires_in,
+        expires_in: loginResponse.expires_in || 1800, // Default to 30 minutes
         user: userResponse
       };
       
@@ -355,9 +385,47 @@ class AuthService extends ApiClient {
 
     try {
       console.log('AuthService: Refreshing access token');
-      // Send refresh token as query parameter based on API testing
+      
+      // The backend has validation issues with the refresh endpoint
+      // Let's try a more direct approach by making the raw request
       const refreshEndpoint = `${config.auth.refresh}?refresh_token=${encodeURIComponent(refreshToken)}`;
-      const loginResponse = await this.post<LoginResponse>(refreshEndpoint, undefined, false); // Don't skip auth
+      const url = getApiUrl(refreshEndpoint);
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        mode: 'cors',
+        credentials: 'include',
+      });
+      
+      console.log('Refresh response status:', response.status);
+      const responseText = await response.text();
+      console.log('Refresh response body:', responseText);
+      
+      if (!response.ok) {
+        // If refresh fails, the token might be expired, clear everything
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        throw new Error(`Token refresh failed: ${response.status} - ${responseText}`);
+      }
+      
+      let loginResponse: LoginResponse;
+      try {
+        loginResponse = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error('Invalid refresh response format');
+      }
+      
+      // Even if backend has validation issues, extract what we can
+      if (!loginResponse.access_token) {
+        throw new Error('No access token in refresh response');
+      }
       
       console.log('AuthService: Token refresh successful');
       
@@ -368,9 +436,9 @@ class AuthService extends ApiClient {
       // Combine refreshed login response with user data
       const authResponse: AuthResponse = {
         access_token: loginResponse.access_token,
-        refresh_token: loginResponse.refresh_token,
-        token_type: loginResponse.token_type,
-        expires_in: loginResponse.expires_in,
+        refresh_token: loginResponse.refresh_token || refreshToken, // Use old refresh token if new one not provided
+        token_type: loginResponse.token_type || 'bearer',
+        expires_in: loginResponse.expires_in || 1800, // Default to 30 minutes
         user: userResponse
       };
       

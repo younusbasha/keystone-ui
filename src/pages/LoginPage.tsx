@@ -540,9 +540,43 @@ export function LoginPage() {
                         console.log('Registration test result:', regTest);
                         alert(`Registration Test: ${regTest.status} - ${regTest.message}`);
                       }}
-                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded"
+                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded mr-2"
                     >
                       Test Registration
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        console.log('Testing refresh token...');
+                        try {
+                          // First login to get tokens
+                          const { authService } = await import('../services/authService');
+                          await authService.login({
+                            username: 'vaibhav@mailinator.com',
+                            password: 'Test@1234'
+                          });
+                          console.log('Login successful, testing refresh...');
+                          
+                          // Wait a moment then test refresh
+                          setTimeout(async () => {
+                            try {
+                              const refreshResult = await authService.refreshToken();
+                              console.log('Refresh successful:', refreshResult);
+                              alert('✅ Refresh Token Test: SUCCESS');
+                            } catch (refreshError: any) {
+                              console.error('Refresh failed:', refreshError);
+                              alert(`❌ Refresh Token Test: FAILED - ${refreshError?.message || 'Unknown error'}`);
+                            }
+                          }, 1000);
+                          
+                        } catch (error: any) {
+                          console.error('Test failed:', error);
+                          alert(`❌ Refresh Token Test: FAILED - ${error?.message || 'Unknown error'}`);
+                        }
+                      }}
+                      className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded"
+                    >
+                      Test Refresh Token
                     </button>
                   </div>
                   
