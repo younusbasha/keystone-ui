@@ -73,6 +73,16 @@ export interface Project {
   integrations: IntegrationType[];
   assignedAgents: string[];
   owner: string;
+  // Additional fields from API
+  priority?: 'low' | 'medium' | 'high';
+  start_date?: string | null;
+  end_date?: string | null;
+  budget?: number;
+  owner_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  requirements_count?: number;
+  tasks_count?: number;
 }
 
 export interface Agent {
@@ -140,25 +150,18 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  storyId: string;
-  status: TaskStatus;
-  priority: Priority;
-  component: Component;
-  assignedTo: string; // Agent name or "human"
-  isAgentAssigned: boolean;
-  generatedCode?: string;
-  testCases?: string[];
-  infraSetup?: string[];
-  comments: Comment[];
-  approvals: Approval[];
-  createdAt: string;
-  updatedAt: string;
-  estimatedHours?: number;
-  actualHours?: number;
-  dependencies: string[];
-  blockers: string[];
-  generatedBy?: string; // Agent ID
-  confidence: number;
+  project_id: string;
+  requirement_id?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'cancelled';
+  estimated_hours?: number;
+  actual_hours?: number;
+  task_type: 'development' | 'testing' | 'documentation' | 'design' | 'review' | 'deployment';
+  assigned_to?: string;
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
 }
 
 export interface RequirementAnalysis {

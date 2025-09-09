@@ -3,11 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { Layout } from './components/layout/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { RequirementsPageFunctional as RequirementsPage } from './pages/RequirementsPageFunctional';
+import { TasksPage } from './pages/TasksPage';
 import { TaskBreakdownPage } from './pages/TaskBreakdownPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
 import { AgentsPage } from './pages/AgentsPage';
@@ -70,6 +72,11 @@ function AppRoutes() {
       } />
       <Route path="/tasks" element={
         <ProtectedRoute>
+          <TasksPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/task-breakdown" element={
+        <ProtectedRoute>
           <TaskBreakdownPage />
         </ProtectedRoute>
       } />
@@ -121,15 +128,17 @@ function AppRoutes() {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <Router>
-            <div className="min-h-screen bg-gradient-to-br from-surface-50 via-white to-primary-50/30 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800 transition-colors duration-300">
-              <AppRoutes />
-            </div>
-          </Router>
-        </DataProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <DataProvider>
+            <Router>
+              <div className="min-h-screen bg-gradient-to-br from-surface-50 via-white to-primary-50/30 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800 transition-colors duration-300">
+                <AppRoutes />
+              </div>
+            </Router>
+          </DataProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

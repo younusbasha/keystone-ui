@@ -98,6 +98,33 @@ export interface TrendsAnalytics {
 
 // Dashboard API Service
 class DashboardService {
+  // Get dashboard statistics
+  async getStats(): Promise<DashboardOverview> {
+    return apiClient.get<DashboardOverview>(config.dashboard.stats);
+  }
+
+  // Get detailed dashboard metrics
+  async getMetrics(): Promise<any> {
+    return apiClient.get<any>(config.dashboard.metrics);
+  }
+
+  // Get activity feed
+  async getActivity(params?: {
+    limit?: number;
+    offset?: number;
+    type?: string;
+    project_id?: string;
+  }): Promise<{ activities: ActivityItem[]; total: number }> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.project_id) searchParams.set('project_id', params.project_id);
+
+    const endpoint = `${config.dashboard.activity}?${searchParams.toString()}`;
+    return apiClient.get<{ activities: ActivityItem[]; total: number }>(endpoint);
+  }
+
   // Get dashboard overview
   async getOverview(params?: { project_id?: string }): Promise<DashboardOverview> {
     const searchParams = new URLSearchParams();
@@ -131,7 +158,7 @@ class DashboardService {
     return apiClient.get<ProjectMetrics | ProjectMetrics[]>(endpoint);
   }
 
-  // Get activity feed
+  // Get activity feed (legacy endpoint)
   async getActivityFeed(params?: {
     project_id?: string;
     limit?: number;

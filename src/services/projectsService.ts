@@ -8,18 +8,21 @@ export interface Project {
   description: string;
   priority: 'low' | 'medium' | 'high';
   status?: 'planning' | 'in_progress' | 'completed' | 'on_hold';
-  start_date: string;
-  end_date: string;
+  start_date: string | null;
+  end_date: string | null;
   budget: number;
+  owner_id?: string;
   created_at?: string;
   updated_at?: string;
+  requirements_count?: number;
+  tasks_count?: number;
 }
 
 export interface ProjectListResponse {
-  items: Project[];
+  projects: Project[];
   total: number;
-  skip: number;
-  limit: number;
+  page: number;
+  page_size: number;
 }
 
 // Projects API Service
@@ -70,9 +73,9 @@ export interface Requirement {
   type: 'functional' | 'non_functional' | 'technical';
   priority: 'low' | 'medium' | 'high';
   status?: 'draft' | 'active' | 'completed' | 'archived';
-  project_id: string;
+  project_id: string | number; // Backend might expect integer
   acceptance_criteria: string[];
-  tags: string[];
+  tags?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -85,15 +88,41 @@ export interface RequirementAnalysis {
   recommendations: string[];
 }
 
+export interface RequirementAnalysisRequest {
+  requirement_text: string;
+}
+
+export interface RequirementListResponse {
+  items: Requirement[];
+  total: number;
+}
+
 // Requirements API Service
 class RequirementsService {
+  // List all requirements
+  async listAllRequirements(params?: {
+    skip?: number;
+    limit?: number;
+    type?: string;
+    priority?: string;
+  }): Promise<RequirementListResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.skip !== undefined) searchParams.set('skip', params.skip.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.priority) searchParams.set('priority', params.priority);
+
+    const endpoint = `${config.requirements.listAll}?${searchParams.toString()}`;
+    return apiClient.get<RequirementListResponse>(endpoint);
+  }
+
   // List requirements for a project
   async listRequirements(projectId: string, params?: {
     skip?: number;
     limit?: number;
     type?: string;
     priority?: string;
-  }): Promise<{ items: Requirement[]; total: number }> {
+  }): Promise<RequirementListResponse> {
     const searchParams = new URLSearchParams();
     if (params?.skip !== undefined) searchParams.set('skip', params.skip.toString());
     if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
@@ -101,7 +130,7 @@ class RequirementsService {
     if (params?.priority) searchParams.set('priority', params.priority);
 
     const endpoint = `${config.requirements.list(projectId)}?${searchParams.toString()}`;
-    return apiClient.get<{ items: Requirement[]; total: number }>(endpoint);
+    return apiClient.get<RequirementListResponse>(endpoint);
   }
 
   // Create a new requirement
@@ -119,9 +148,14 @@ class RequirementsService {
     return apiClient.put<Requirement>(config.requirements.update(id), updates);
   }
 
-  // AI analyze requirement
+  // AI analyze requirement by ID
   async analyzeRequirement(id: string): Promise<RequirementAnalysis> {
     return apiClient.post<RequirementAnalysis>(config.requirements.analyze(id));
+  }
+
+  // AI analyze requirement text (general analysis)
+  async analyzeRequirementText(analysisRequest: RequirementAnalysisRequest): Promise<RequirementAnalysis> {
+    return apiClient.post<RequirementAnalysis>(config.requirements.analyzeGeneral, analysisRequest);
   }
 
   // Generate tasks from requirement

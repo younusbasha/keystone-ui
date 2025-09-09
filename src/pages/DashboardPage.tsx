@@ -15,7 +15,9 @@ export function DashboardPage() {
     activities, 
     dashboardStats, 
     createRequirementAnalysis, 
-    createProject
+    createProject,
+    availableAgents,
+    isLoading
   } = useData();
   
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -543,16 +545,90 @@ export function DashboardPage() {
           </div>
 
           <div className="p-4 bg-brand-50 dark:bg-brand-900/20 rounded-lg">
-            <div className="flex items-start space-x-3">
+            <div className="flex items-start space-x-3 mb-4">
               <Zap className="w-5 h-5 text-brand-600 dark:text-brand-400 mt-0.5" />
               <div>
                 <h4 className="font-medium text-brand-900 dark:text-brand-100">
                   AI Agent Assignment
                 </h4>
                 <p className="text-sm text-brand-700 dark:text-brand-300 mt-1">
-                  Agents will be automatically assigned based on your project requirements and can be configured later.
+                  Select AI agents to work on this project. Agents can be added or modified later.
                 </p>
               </div>
+            </div>
+            
+            {/* Agent Selection */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Available Agents {availableAgents.length > 0 && `(${availableAgents.length})`}
+              </label>
+              
+              {isLoading ? (
+                <div className="flex items-center space-x-2 text-sm text-neutral-500">
+                  <div className="animate-spin h-4 w-4 border-2 border-brand-600 border-t-transparent rounded-full"></div>
+                  <span>Loading agents...</span>
+                </div>
+              ) : availableAgents.length === 0 ? (
+                <div className="text-sm text-neutral-500 dark:text-neutral-400 p-3 border border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg text-center">
+                  No agents available. Agents will be automatically assigned based on project type.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                  {availableAgents.map((agent: any) => (
+                    <label
+                      key={agent.id}
+                      className="flex items-center space-x-3 p-2 rounded-lg border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newProject.assignedAgents.includes(agent.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewProject({
+                              ...newProject,
+                              assignedAgents: [...newProject.assignedAgents, agent.id]
+                            });
+                          } else {
+                            setNewProject({
+                              ...newProject,
+                              assignedAgents: newProject.assignedAgents.filter(id => id !== agent.id)
+                            });
+                          }
+                        }}
+                        className="rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                            {agent.name}
+                          </span>
+                          <span className="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full">
+                            {agent.agent_type || agent.type}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            agent.status === 'idle' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                            agent.status === 'busy' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'
+                          }`}>
+                            {agent.status}
+                          </span>
+                        </div>
+                        {agent.capabilities && agent.capabilities.length > 0 && (
+                          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            {agent.capabilities.slice(0, 3).join(', ')}{agent.capabilities.length > 3 ? '...' : ''}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+              
+              {newProject.assignedAgents.length > 0 && (
+                <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {newProject.assignedAgents.length} agent{newProject.assignedAgents.length !== 1 ? 's' : ''} selected
+                </div>
+              )}
             </div>
           </div>
 

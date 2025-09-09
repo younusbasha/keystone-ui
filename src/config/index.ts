@@ -28,31 +28,34 @@ export const config = {
 
   // Requirements Endpoints  
   requirements: {
-    list: (projectId: string) => `/api/v1/requirements/project/${projectId}`,
-    create: '/api/v1/requirements',
-    get: (id: string) => `/api/v1/requirements/${id}`,
-    update: (id: string) => `/api/v1/requirements/${id}`,
-    analyze: (id: string) => `/api/v1/requirements/${id}/analyze`,
-    generateTasks: (id: string) => `/api/v1/requirements/${id}/generate-tasks`,
+    list: (projectId: string) => `/api/v1/requirements/project/${projectId}/`,
+    listAll: '/api/v1/requirements/',
+    create: '/api/v1/requirements/',
+    get: (id: string) => `/api/v1/requirements/${id}/`,
+    update: (id: string) => `/api/v1/requirements/${id}/`,
+    analyze: (id: string) => `/api/v1/requirements/${id}/analyze/`,
+    analyzeGeneral: '/api/v1/requirements/analyze/',
+    generateTasks: (id: string) => `/api/v1/requirements/${id}/generate-tasks/`,
   },
 
   // Tasks Endpoints
   tasks: {
-    list: '/api/v1/tasks',
-    create: '/api/v1/tasks',
-    get: (id: string) => `/api/v1/tasks/${id}`,
-    update: (id: string) => `/api/v1/tasks/${id}`,
-    start: (id: string) => `/api/v1/tasks/${id}/start`,
-    complete: (id: string) => `/api/v1/tasks/${id}/complete`,
-    comments: (id: string) => `/api/v1/tasks/${id}/comments`,
+    list: '/api/v1/tasks/',
+    create: '/api/v1/tasks/',
+    get: (id: string) => `/api/v1/tasks/${id}/`,
+    update: (id: string) => `/api/v1/tasks/${id}/`,
+    updateStatus: (id: string) => `/api/v1/tasks/${id}/status/`,
+    start: (id: string) => `/api/v1/tasks/${id}/start/`,
+    complete: (id: string) => `/api/v1/tasks/${id}/complete/`,
+    comments: (id: string) => `/api/v1/tasks/${id}/comments/`,
   },
 
   // AI Agents Endpoints
   agents: {
-    list: '/api/v1/agents',
-    create: '/api/v1/agents',
-    get: (id: string) => `/api/v1/agents/${id}`,
-    update: (id: string) => `/api/v1/agents/${id}`,
+    list: '/api/v1/agents/',
+    create: '/api/v1/agents/',
+    get: (id: string) => `/api/v1/agents/${id}/`,
+    update: (id: string) => `/api/v1/agents/${id}/`,
     execute: (id: string) => `/api/v1/agents/${id}/execute`,
     actions: (id: string) => `/api/v1/agents/${id}/actions`,
     approveAction: (actionId: string) => `/api/v1/agents/actions/${actionId}/approve`,
@@ -61,24 +64,27 @@ export const config = {
 
   // Integrations & Deployments Endpoints
   integrations: {
-    list: '/api/v1/integrations',
-    create: '/api/v1/integrations',
-    get: (id: string) => `/api/v1/integrations/${id}`,
-    test: (id: string) => `/api/v1/integrations/${id}/test`,
+    list: '/api/v1/integrations/',
+    create: '/api/v1/integrations/',
+    get: (id: string) => `/api/v1/integrations/${id}/`,
+    test: (id: string) => `/api/v1/integrations/${id}/test/`,
     deployments: {
-      list: '/api/v1/integrations/deployments',
-      create: '/api/v1/integrations/deployments',
-      get: (id: string) => `/api/v1/integrations/deployments/${id}`,
+      list: '/api/v1/integrations/deployments/',
+      create: '/api/v1/integrations/deployments/',
+      get: (id: string) => `/api/v1/integrations/deployments/${id}/`,
     },
   },
 
   // Dashboard & Analytics Endpoints
   dashboard: {
-    overview: '/api/v1/dashboard/overview',
-    automation: '/api/v1/dashboard/metrics/automation',
-    projects: '/api/v1/dashboard/metrics/projects',
-    activityFeed: '/api/v1/dashboard/activity-feed',
-    trends: '/api/v1/dashboard/analytics/trends',
+    stats: '/api/v1/dashboard/stats/',
+    metrics: '/api/v1/dashboard/metrics/',
+    activity: '/api/v1/dashboard/activity/',
+    overview: '/api/v1/dashboard/overview/',
+    automation: '/api/v1/dashboard/metrics/automation/',
+    projects: '/api/v1/dashboard/metrics/projects/',
+    activityFeed: '/api/v1/dashboard/activity-feed/',
+    trends: '/api/v1/dashboard/analytics/trends/',
   },
 
   // App Configuration
